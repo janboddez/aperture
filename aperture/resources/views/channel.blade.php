@@ -347,6 +347,7 @@ $(function(){
   $('#new-source').click(function(e){
     $("#new-source-feeds ul").empty();
     $("#source-url").val("");
+    $("#new-source-find-feeds-btn").addClass("is-primary");
     $('#new-source-modal').addClass('is-active');
     $("#source-url").focus();
     e.preventDefault();
@@ -510,5 +511,11 @@ function bind_follow_buttons() {
     });
   });
 }
+
+$("#source-url").keyup(function(e){
+  if(e.keyCode == 13){
+    $("#new-source-find-feeds-btn").click();
+  }
+});
 </script>
 @endsection
