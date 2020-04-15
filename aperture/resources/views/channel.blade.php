@@ -362,7 +362,8 @@ $(function(){
     $('#source-url-readonly').val($(this).parents(".source").find('.source-url').attr('value'));
     $('#source-settings-modal .save').data("source", $(this).data("source"));
     $('#source-settings-modal').addClass('is-active');
-    e.preventDefault();
+    $("#source-name").focus();
+   e.preventDefault();
   });
 
   $("#source-settings-modal .save").click(function(){
@@ -517,6 +518,12 @@ function bind_follow_buttons() {
 $("#source-url").keyup(function(e){
   if(e.keyCode == 13){
     $("#new-source-find-feeds-btn").click();
+  }
+});
+
+$("#source-name").keyup(function(e){
+  if(e.keyCode == 13){
+    $("#source-settings-modal .save").click();
   }
 });
 </script>
