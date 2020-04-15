@@ -32,7 +32,7 @@
         @if($source->name)
           <span>{{ $source->name }}</span>
           &bull;
-        @elseif($source->pivot->name)
+        @elseif($source->url)
           <span>{{ parse_url($source->url, PHP_URL_HOST) }}</span>
           &bull;
         @endif
@@ -354,6 +354,7 @@ $(function(){
   });
   $('#new-apikey').click(function(e){
     $('#new-apikey-modal').addClass('is-active');
+    $('#new-apikey-name').focus();
     e.preventDefault();
   });
 
@@ -378,6 +379,7 @@ $(function(){
 
   $('#channel-settings').click(function(e){
     $('#channel-settings-modal').addClass('is-active');
+    $('#channel-name').focus();
     e.preventDefault();
   });
 
@@ -465,6 +467,7 @@ $(function(){
     $("#remove-source-modal .remove-future").data("source", $(this).data("source"));
     $("#remove-source-modal .remove-all").data("source", $(this).data("source"));
     $("#remove-source-modal").addClass("is-active");
+    $("#remove-source-modal .remove-future").focus();
     e.preventDefault();
   });
 
@@ -515,15 +518,27 @@ function bind_follow_buttons() {
   });
 }
 
-$("#source-url").keyup(function(e){
+$('#new-source-modal input[type="url"], #source-settings-modal input[type="text"]').keypress(function(e){
   if(e.keyCode == 13){
-    $("#new-source-find-feeds-btn").click();
+    $('#new-source-find-feeds-btn').click();
   }
 });
 
-$("#source-name").keyup(function(e){
+$('#new-apikey-modal input[type="text"]').keypress(function(e){
   if(e.keyCode == 13){
-    $("#source-settings-modal .save").click();
+    $('#new-apikey-btn').click();
+  }
+});
+
+$('#channel-settings-modal input[type="text"], #channel-settings-modal input[type="checkbox"], #channel-settings-modal select').keypress(function(e){
+  if(e.keyCode == 13){
+    $('#channel-settings-modal .save').click();
+  }
+});
+
+$('#source-settings-modal input[type="text"]').keypress(function(e){
+  if(e.keyCode == 13){
+    $('#source-settings-modal .save').click();
   }
 });
 </script>
