@@ -449,8 +449,10 @@ $(function(){
         $("#new-source-feeds ul").append('<li><h3>'+feed.type+'</h3><div class="url">'+feed.url+'</div><button class="button is-primary" data-url="'+feed.url+'" data-format="'+feed.type+'">Follow</button></li>');
       }
       if(response.error_description) {
+        $("#new-source-find-feeds-btn").addClass("is-primary");
         $("#new-source-feeds ul").append('<li>'+response.error_description+'</li>');
       } else if(response.feeds.length == 0) {
+        $("#new-source-find-feeds-btn").addClass("is-primary");
         $("#new-source-feeds ul").append('<li>No feeds were found at the given URL</li>');
       }
       bind_follow_buttons();
