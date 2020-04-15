@@ -95,6 +95,7 @@
 $(function(){
   $('#new-channel').click(function(e){
     $('#new-channel-modal').addClass('is-active');
+    $("#new-channel-modal input[name='name']").focus();
     e.preventDefault();
   });
 
