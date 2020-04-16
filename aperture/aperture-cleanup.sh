@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-cd "$( dirname "${BASH_SOURCE[0]}" )"
+cd "$( dirname "$0" )"
 
 php artisan data:trim
 php artisan data:garbagecollect
