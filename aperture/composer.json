@@ -6,6 +6,7 @@
     "type": "project",
     "require": {
         "php": "^7.2",
+        "celd/opml-import-export": "dev-master",
         "doctrine/dbal": "^2.6",
         "fideloper/proxy": "^4.3",
         "indieauth/client": "0.4.1",
@@ -13,7 +14,6 @@
         "laravel/helpers": "^1.2",
         "laravel/tinker": "~1.0",
         "mf2/mf2": "^0.4",
-        "mnabialek/laravel-sql-logger": "^2.2",
         "p3k/http": ">=0.1.8",
         "p3k/micropub": ">=0.0.2",
         "p3k/utils": ">=1.0",
@@ -23,6 +23,7 @@
     "require-dev": {
         "filp/whoops": "~2.0",
         "fzaninotto/faker": "~1.4",
+        "mnabialek/laravel-sql-logger": "^2.2",
         "mockery/mockery": "~1.0",
         "phpunit/phpunit": "~6.0"
     },
@@ -61,7 +62,8 @@
     "config": {
         "preferred-install": "dist",
         "sort-packages": true,
-        "minimum-stability": "alpha",
+        "minimum-stability": "dev",
+        "prefer-stable": true,
         "optimize-autoloader": true
     }
 }

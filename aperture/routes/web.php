@@ -9,6 +9,9 @@ Route::middleware('web')->group(function(){
     Route::get('/docs', 'PublicController@docs')->name('docs');
     Route::get('/pricing', 'PublicController@pricing')->name('pricing');
 
+    Route::get('opml', 'OpmlController@export');
+    Route::post('opml', 'OpmlController@import')->name('import_opml');
+
     Route::get('/settings', 'SettingsController@index')->name('settings');
     Route::post('/settings/save', 'SettingsController@save')->name('settings_save');
     Route::post('/settings/reload_micropub_config', 'SettingsController@reload_micropub_config')->name('reload_micropub_config');
