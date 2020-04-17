@@ -10,6 +10,7 @@
   </div>
 
   <div class="buttons is-right">
+    <a href="#" id="import-opml" class="button">Import from OPML</a>
     <a href="#" id="new-channel" class="button is-primary">New Channel</a>
   </div>
 
@@ -68,6 +69,42 @@
 </div>
 </section>
 
+<div class="modal" id="import-opml-modal">
+  <form action="{{ route('import_opml') }}" method="POST" enctype="multipart/form-data">
+    {{ csrf_field() }}
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Import from OPML</p>
+        <button class="delete" aria-label="close"></button>
+      </header>
+      <section class="modal-card-body">
+
+      <div class="file">
+        <label class="file-label">
+          <input class="file-input" type="file" name="opml" required="required" accept="text/xml">
+          <span class="file-cta">
+            <span class="file-icon">
+              <i class="fas fa-upload"></i>
+            </span>
+            <span class="file-label">
+              Choose a file…
+            </span>
+	  </span>
+          <span class="file-name">
+            No file uploaded
+          </span>
+        </label>
+      </div>
+
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-primary" type="submit">Import</button>
+      </footer>
+    </div>
+  </form>
+</div>
+
 <div class="modal" id="new-channel-modal">
   <form action="{{ route('create_channel') }}" method="POST">
     {{ csrf_field() }}
@@ -99,6 +136,18 @@ $(function(){
     e.preventDefault();
   });
 
+  $('#import-opml').click(function(e){
+    $('#import-opml-modal').addClass('is-active');
+    $("#import-opml-modal input[name='opml']").focus();
+    e.preventDefault();
+  });
+
+  $('#import-opml-modal button[type="submit"]').click(function(e){
+    if ($('#import-opml-modal input[name="opml"]').get(0).files.length !== 0) {
+      $(this).addClass('is-loading');
+    }
+  });
+
   $('.channel .sort a').click(function(e){
     e.preventDefault();
     if($(this).hasClass("disabled")) { return; }
@@ -122,6 +171,12 @@ $(function(){
       window.location.reload();
     })
   });
+});
+
+$('#import-opml-modal input[name="opml"]').change(function(){
+  if (this.files.length > 0) {
+    $('#import-opml-modal .file-name').text(this.files[0].name);
+  }
 });
 </script>
 <style>
