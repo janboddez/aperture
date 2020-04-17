@@ -22,7 +22,7 @@
     <div class="channel" data-uid="{{ $channel->uid }}">
       @if($channel->uid != 'notifications')
         <div class="sort">
-          <a href="#" data-dir="up" {!! $i > 1 ? '' : 'class="disabled"' !!}><i class="fas fa-caret-up"></i></a>
+          <a href="#" data-dir="up" {!! (! $channels->contains('uid', 'notifications') && $i > 0) || ($channels->contains('uid', 'notifications') && $i > 1) ? '' : 'class="disabled"' !!}><i class="fas fa-caret-up"></i></a>
           <a href="#" data-dir="down" {!! $i < $numChannels-1 ? '' : 'class="disabled"' !!}><i class="fas fa-caret-down"></i></a>
         </div>
       @endif
@@ -80,7 +80,6 @@
         </header>
 
         <section class="modal-card-body">
-
           <div class="file has-name is-fullwidth">
             <label class="file-label">
               <input class="file-input" type="file" name="opml" required="required" accept="text/xml">
