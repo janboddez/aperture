@@ -70,60 +70,61 @@
 </section>
 
 <div class="modal" id="import-opml-modal">
-  <form action="{{ route('import_opml') }}" method="POST" enctype="multipart/form-data">
-    {{ csrf_field() }}
     <div class="modal-background"></div>
     <div class="modal-card">
-      <header class="modal-card-head">
-        <p class="modal-card-title">Import from OPML</p>
-        <button class="delete" aria-label="close"></button>
-      </header>
-      <section class="modal-card-body">
+      <form action="{{ route('import_opml') }}" method="POST" enctype="multipart/form-data">
+        {{ csrf_field() }}
+        <header class="modal-card-head">
+          <p class="modal-card-title">Import from OPML</p>
+          <button class="delete" aria-label="close"></button>
+        </header>
 
-      <div class="file has-name is-fullwidth">
-        <label class="file-label">
-          <input class="file-input" type="file" name="opml" required="required" accept="text/xml">
-          <span class="file-cta">
-            <span class="file-icon">
-              <i class="fas fa-upload"></i>
-            </span>
-            <span class="file-label">
-              Choose a file…
-            </span>
-	  </span>
-          <span class="file-name">
-            No file uploaded
-          </span>
-        </label>
-      </div>
+        <section class="modal-card-body">
 
-      </section>
-      <footer class="modal-card-foot">
-        <button class="button is-primary" type="submit">Import</button>
-      </footer>
+          <div class="file has-name is-fullwidth">
+            <label class="file-label">
+              <input class="file-input" type="file" name="opml" required="required" accept="text/xml">
+              <span class="file-cta">
+                <span class="file-icon">
+                  <i class="fas fa-upload"></i>
+                </span>
+                <span class="file-label">
+                  Choose a file…
+                </span>
+              </span>
+              <span class="file-name">
+                No file uploaded
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <footer class="modal-card-foot">
+          <button class="button is-primary" type="submit">Import</button>
+        </footer>
+      </form>
     </div>
-  </form>
 </div>
 
 <div class="modal" id="new-channel-modal">
-  <form action="{{ route('create_channel') }}" method="POST">
-    {{ csrf_field() }}
     <div class="modal-background"></div>
     <div class="modal-card">
-      <header class="modal-card-head">
-        <p class="modal-card-title">Create a Channel</p>
-        <button class="delete" aria-label="close"></button>
-      </header>
-      <section class="modal-card-body">
+      <form action="{{ route('create_channel') }}" method="POST">
+        {{ csrf_field() }}
+        <header class="modal-card-head">
+          <p class="modal-card-title">Create a Channel</p>
+          <button class="delete" aria-label="close"></button>
+        </header>
 
-        <input class="input" type="text" placeholder="Name" name="name" required="required">
+        <section class="modal-card-body">
+          <input class="input" type="text" placeholder="Name" name="name" required="required">
+        </section>
 
-      </section>
-      <footer class="modal-card-foot">
-        <button class="button is-primary" type="submit">Create</button>
-      </footer>
+        <footer class="modal-card-foot">
+          <button class="button is-primary" type="submit">Create</button>
+        </footer>
+      </form>
     </div>
-  </form>
 </div>
 @endsection
 
