@@ -11,6 +11,7 @@ use Celd\Opml\Importer;
 use Celd\Opml\Model\Category;
 use Celd\Opml\Model\FeedList;
 use Celd\Opml\Model\Feed;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Auth;
@@ -20,7 +21,7 @@ class OpmlController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth', ['except' => ['exportPublicly']]);
     }
 
     public function import(Request $request)
@@ -61,9 +62,6 @@ class OpmlController extends Controller
 
     public function export()
     {
-        // $user = User::where('id', $user_id)
-        //     ->firstOrFail();
-
         $channels = Channel::where('user_id', Auth::id())
             ->where('hide_in_demo_mode', '!=', 1)
             ->with(['sources' => function ($query) {
@@ -73,13 +71,35 @@ class OpmlController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Force an explicit content type
-        // return Response(
-        //     view('layouts.opml', compact('channels')),
-        //     200,
-        //     ['Content-Type' => 'text/xml; charset=utf-8']
-        // );
+        if (! $channels) {
+            abort(404);
+        }
 
+        return $this->toOpml($channels);
+    }
+
+    public function exportPublicly(int $user_id)
+    {
+        $user = User::where('id', $user_id)->firstOrFail();
+
+        $channels = Channel::where('user_id', $user_id)
+            ->where('hide_in_demo_mode', '!=', 1)
+            ->with(['sources' => function ($query) {
+                $query->where('format', '!=', 'jsonfeed')
+                    ->orderBy('url');
+            }])
+            ->orderBy('name')
+            ->get();
+
+        if (! $channels) {
+            abort(404);
+        }
+
+        return $this->toOpml($channels);
+    }
+
+    private function toOpml(Collection $channels)
+    {
         $feedList = new FeedList();
 
         foreach ($channels as $channel) {
@@ -91,9 +111,9 @@ class OpmlController extends Controller
                 $feed->setTitle($source->pivot->name);
                 $feed->setType($source->format);
 
-		// Decode already encoded ampersands, then encode all ampersands
-		$url = str_replace('&amp;', '&', $source->url);
-		$url = str_replace('&', '&amp;', $source->url);
+                // Decode already encoded ampersands, then encode all ampersands
+                $url = str_replace('&amp;', '&', $source->url);
+                $url = str_replace('&', '&amp;', $source->url);
 
                 if ($source->format === 'microformats') {
                     $feed->setHtmlUrl($url);

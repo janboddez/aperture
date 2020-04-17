@@ -10,6 +10,7 @@ Route::middleware('web')->group(function(){
     Route::get('/pricing', 'PublicController@pricing')->name('pricing');
 
     Route::get('opml', 'OpmlController@export');
+    Route::get('opml/{user_id}', 'OpmlController@exportPublicly');
     Route::post('opml', 'OpmlController@import')->name('import_opml');
 
     Route::get('/settings', 'SettingsController@index')->name('settings');
