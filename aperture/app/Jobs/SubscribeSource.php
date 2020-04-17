@@ -38,7 +38,11 @@ class SubscribeSource implements ShouldQueue
      */
     public function handle()
     {
-        $channel = Channel::findOrFail($this->channelId);
+        $channel = Channel::find($this->channelId);
+
+        if (! $channel) {
+            return;
+        }
 
         if ($this->feed->getType() === 'microformats') {
             $source = Source::where('url', $this->feed->getHtmlUrl())->first();
@@ -51,7 +55,7 @@ class SubscribeSource implements ShouldQueue
             $source->created_by = $channel->user_id;
 
             if ($this->feed->getType() === 'microformats') {
-                $source->url = $this->feed->getHtmlUrl();
+                $source->url = $this->feed->getHtmlUrl() ?? $this->feed->getXmlUrl();
             } else {
                 $source->url = $this->feed->getXmlUrl();
             }
