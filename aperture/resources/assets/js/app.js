@@ -1,4 +1,7 @@
-require('./bootstrap');
+//require('./bootstrap');
+try {
+  window.$ = window.jQuery = require('jquery');
+} catch (e) {}
 
 window.csrf_token = function() {
   return $('meta[name="csrf-token"]').attr('content');
