@@ -35,11 +35,13 @@ class OpmlController extends Controller
 
         $importer = new Importer(file_get_contents($file->getPathname()));
         $feedList = $importer->getFeedList();
+        $items = array_reverse($feedList->getItems());
 
-        foreach ($feedList->getItems() as $item) {
+        foreach ($items as $item) {
             if ($item->getType() === 'category') {
                 $category = trim($item->getTitle());
-                $channel = Channel::where('name', $category)
+                $channel = Channel::where('user_id', Auth::id())
+                    ->where('name', $category)
                     ->first();
 
                 if (! $channel) {
