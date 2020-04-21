@@ -1,7 +1,10 @@
 <?php
 
 Route::middleware('web')->group(function () {
-    Route::get('', function () {
+    Route::get('/', function () {
+        if (Auth::check()) {
+            return view('dashboard');
+        }
         return view('welcome');
     })->name('index');
 
