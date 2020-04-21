@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class EntryUrl extends Migration
 {
@@ -15,7 +15,7 @@ class EntryUrl extends Migration
     {
         Schema::table('entries', function (Blueprint $table) {
             $table->string('url', 512);
-        });        
+        });
     }
 
     /**
@@ -27,6 +27,6 @@ class EntryUrl extends Migration
     {
         Schema::table('entries', function (Blueprint $table) {
             $table->dropColumn('url');
-        });        
+        });
     }
 }

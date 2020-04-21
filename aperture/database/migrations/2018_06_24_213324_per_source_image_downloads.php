@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class PerSourceImageDownloads extends Migration
 {
@@ -13,9 +13,9 @@ class PerSourceImageDownloads extends Migration
      */
     public function up()
     {
-      Schema::table('sources', function (Blueprint $table) {
-        $table->boolean('download_images')->default(false);
-      });
+        Schema::table('sources', function (Blueprint $table) {
+            $table->boolean('download_images')->default(false);
+        });
     }
 
     /**
@@ -25,8 +25,8 @@ class PerSourceImageDownloads extends Migration
      */
     public function down()
     {
-      Schema::table('sources', function (Blueprint $table) {
-        $table->dropColumn('download_images');
-      });
+        Schema::table('sources', function (Blueprint $table) {
+            $table->dropColumn('download_images');
+        });
     }
 }

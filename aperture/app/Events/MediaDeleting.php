@@ -1,19 +1,20 @@
 <?php
+
 namespace App\Events;
 
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Foundation\Events\Dispatchable;
 use App\Media;
-use Log;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
 
 class MediaDeleting
 {
-  use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
-  public $file;
+    public $file;
 
-  public function __construct(Media $file)
-  {
-    $this->file = $file;
-  }
+    public function __construct(Media $file)
+    {
+        $this->file = $file;
+    }
 }

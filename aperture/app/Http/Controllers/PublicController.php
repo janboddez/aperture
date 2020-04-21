@@ -1,17 +1,16 @@
 <?php
-namespace App\Http\Controllers;
 
-use Request, Response, DB;
+namespace App\Http\Controllers;
 
 class PublicController extends Controller
 {
+    public function docs()
+    {
+        return view('docs');
+    }
 
-  public function docs() {
-    return view('docs');
-  }
-
-  public function pricing() {
-    return view('pricing');
-  }
-
+    public function pricing()
+    {
+        return view('pricing');
+    }
 }

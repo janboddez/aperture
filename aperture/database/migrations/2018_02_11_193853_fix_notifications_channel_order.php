@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
+use App\Channel;
+use App\User;
 use Illuminate\Database\Migrations\Migration;
-use App\User, App\Channel;
 
 class FixNotificationsChannelOrder extends Migration
 {
@@ -16,12 +15,13 @@ class FixNotificationsChannelOrder extends Migration
     {
         // Move the notifications channel to the top of the list
         $users = User::all();
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $channels = Channel::where('user_id', $user->id)
-              ->orderByDesc(DB::raw('uid = "notifications"'))
-              ->orderBy('sort')
-              ->get();
-            foreach($channels as $i=>$channel) {
+                ->orderByDesc(DB::raw('uid = "notifications"'))
+                ->orderBy('sort')
+                ->get();
+
+            foreach ($channels as $i => $channel) {
                 $channel->sort = $i;
                 $channel->save();
             }
@@ -35,6 +35,5 @@ class FixNotificationsChannelOrder extends Migration
      */
     public function down()
     {
-        //
     }
 }

@@ -3,19 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Channel;
-use App\User;
-use App\Source;
 use App\Jobs\SubscribeSource;
-
+use App\User;
+use Auth;
 use Celd\Opml\Importer;
 use Celd\Opml\Model\Category;
-use Celd\Opml\Model\FeedList;
 use Celd\Opml\Model\Feed;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\Response;
-use Illuminate\Http\Request;
-use Auth;
+use Celd\Opml\Model\FeedList;
 use Gate;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class OpmlController extends Controller
 {
@@ -38,7 +36,7 @@ class OpmlController extends Controller
         $items = array_reverse($feedList->getItems());
 
         foreach ($items as $item) {
-            if ($item->getType() === 'category') {
+            if ('category' === $item->getType()) {
                 $category = trim($item->getTitle());
                 $channel = Channel::where('user_id', Auth::id())
                     ->where('name', $category)
@@ -117,7 +115,7 @@ class OpmlController extends Controller
                 $url = str_replace('&amp;', '&', $source->url);
                 $url = str_replace('&', '&amp;', $source->url);
 
-                if ($source->format === 'microformats') {
+                if ('microformats' === $source->format) {
                     $feed->setHtmlUrl($url);
                 } else {
                     $feed->setXmlUrl($url);

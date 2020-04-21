@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
-use App\Entry;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class MediaEntryJoin extends Migration
 {
@@ -21,8 +20,8 @@ class MediaEntryJoin extends Migration
             $table->index(['entry_id', 'media_id']);
         });
         Schema::table('media', function (Blueprint $table) {
-          $table->dropColumn('entry_id');
-          $table->index('filename');
+            $table->dropColumn('entry_id');
+            $table->index('filename');
         });
     }
 

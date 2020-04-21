@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class EntryPublished extends Migration
 {
@@ -15,7 +15,7 @@ class EntryPublished extends Migration
     {
         Schema::table('entries', function (Blueprint $table) {
             $table->datetime('published')->nullable();
-        });        
+        });
     }
 
     /**

@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class LongerOriginalUrl extends Migration
 {
@@ -13,8 +13,8 @@ class LongerOriginalUrl extends Migration
      */
     public function up()
     {
-        Schema::table('media', function(Blueprint $table){
-          $table->string('original_url', 1024)->change();
+        Schema::table('media', function (Blueprint $table) {
+            $table->string('original_url', 1024)->change();
         });
     }
 
@@ -25,8 +25,8 @@ class LongerOriginalUrl extends Migration
      */
     public function down()
     {
-        Schema::table('media', function(Blueprint $table){
-          $table->string('original_url', 512)->change();
+        Schema::table('media', function (Blueprint $table) {
+            $table->string('original_url', 512)->change();
         });
     }
 }

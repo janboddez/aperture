@@ -2,16 +2,15 @@
 
 namespace App\Events;
 
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PresenceChannel;
+use App\Channel;
+use App\Source;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-
-use App\Source, App\Channel;
+use Illuminate\Queue\SerializesModels;
 
 class SourceRemoved
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public $source;
     public $channel;

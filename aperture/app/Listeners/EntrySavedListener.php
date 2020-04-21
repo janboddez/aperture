@@ -1,13 +1,16 @@
 <?php
+
 namespace App\Listeners;
 
+use App\Entry;
 use App\Events\EntrySaved;
-use Illuminate\Queue\InteractsWithQueue;
+use App\Media;
+use DOMDocument;
+use DOMXPath;
+use File;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Log, Storage, File;
 use IMagick;
-use App\Entry, App\Media;
-use DOMXPath, DOMDocument;
+use Log;
 
 class EntrySavedListener implements ShouldQueue
 {
@@ -23,13 +26,15 @@ class EntrySavedListener implements ShouldQueue
     /**
      * Handle the event.
      *
-     * @param  SourceAdded  $event
+     * @param SourceAdded $event
+     *
      * @return void
      */
     public function handle(EntrySaved $event)
     {
-        if(!env('MEDIA_URL'))
+        if (! env('MEDIA_URL')) {
             return;
+        }
 
         $modified = false;
 
@@ -37,10 +42,11 @@ class EntrySavedListener implements ShouldQueue
 
         // Find any external image and video URLs, download a copy, and rewrite the entry
 
-        if(isset($data['photo'])) {
-            if(!is_array($data['photo']))
+        if (isset($data['photo'])) {
+            if (! is_array($data['photo'])) {
                 $data['photo'] = [$data['photo']];
-            foreach($data['photo'] as $i=>$photo) {
+            }
+            foreach ($data['photo'] as $i => $photo) {
                 $file = $this->_download($event->entry, $photo);
                 $url = is_string($file) ? $file : $file->url();
                 $this->_addImageMetaData($data, $file, $url);
@@ -49,10 +55,11 @@ class EntrySavedListener implements ShouldQueue
             }
         }
 
-        if(isset($data['video'])) {
-            if(!is_array($data['video']))
+        if (isset($data['video'])) {
+            if (! is_array($data['video'])) {
                 $data['video'] = [$data['video']];
-            foreach($data['video'] as $i=>$video) {
+            }
+            foreach ($data['video'] as $i => $video) {
                 $file = $this->_download($event->entry, $video, false, false);
                 $url = is_string($file) ? $file : $file->url();
                 $modified = $modified || ($url != $video);
@@ -60,10 +67,11 @@ class EntrySavedListener implements ShouldQueue
             }
         }
 
-        if(isset($data['audio'])) {
-            if(!is_array($data['audio']))
+        if (isset($data['audio'])) {
+            if (! is_array($data['audio'])) {
                 $data['audio'] = [$data['audio']];
-            foreach($data['audio'] as $i=>$audio) {
+            }
+            foreach ($data['audio'] as $i => $audio) {
                 $file = $this->_download($event->entry, $audio, false, false);
                 $url = is_string($file) ? $file : $file->url();
                 $modified = $modified || ($url != $audio);
@@ -73,19 +81,18 @@ class EntrySavedListener implements ShouldQueue
 
         // TODO: dive into refs and extract URLs from there
 
-
         // parse HTML content and find <img> tags
-        if(isset($data['content']['html']) && $data['content']['html']) {
+        if (isset($data['content']['html']) && $data['content']['html']) {
             $map = [];
 
             $doc = new DOMDocument();
             @$doc->loadHTML(self::toHtmlEntities($data['content']['html']));
-            if($doc) {
+            if ($doc) {
                 $xpath = new DOMXPath($doc);
-                foreach($xpath->query('//img') as $el) {
+                foreach ($xpath->query('//img') as $el) {
                     $src = ''.$el->getAttribute('src');
-                    if($src) {
-                        #Log::info('Found img in html: '.$src);
+                    if ($src) {
+                        //Log::info('Found img in html: '.$src);
                         $file = $this->_download($event->entry, $src);
                         $map[$src] = is_string($file) ? $file : $file->url();
                         $modified = $modified || ($src != $map[$src]);
@@ -93,124 +100,132 @@ class EntrySavedListener implements ShouldQueue
                 }
             }
 
-            foreach($map as $original=>$new) {
+            foreach ($map as $original => $new) {
                 $data['content']['html'] = str_replace($original, $new, $data['content']['html']);
             }
         }
 
-
-        if(isset($data['author']['photo']) && $data['author']['photo']) {
+        if (isset($data['author']['photo']) && $data['author']['photo']) {
             $file = $this->_download($event->entry, $data['author']['photo'], 256);
             $url = is_string($file) ? $file : $file->url();
             $modified = $modified || ($url != $data['author']['photo']);
             $data['author']['photo'] = $url;
         }
 
-        if($modified) {
-            $event->entry->data = json_encode($data, JSON_PRETTY_PRINT+JSON_UNESCAPED_SLASHES);
+        if ($modified) {
+            $event->entry->data = json_encode($data, JSON_PRETTY_PRINT + JSON_UNESCAPED_SLASHES);
             $event->entry->save();
         }
     }
 
-    private static function toHtmlEntities($input) {
-      return mb_convert_encoding($input, 'HTML-ENTITIES', mb_detect_encoding($input));
+    private static function toHtmlEntities($input)
+    {
+        return mb_convert_encoding($input, 'HTML-ENTITIES', mb_detect_encoding($input));
     }
 
-    private function _download(Entry $entry, $url, $maxSize=false, $proxy=true) {
-      if(!$entry->source->download_images || !env('MEDIA_URL')) {
-        return $url;
-      }
+    private function _download(Entry $entry, $url, $maxSize = false, $proxy = true)
+    {
+        if (! $entry->source->download_images || ! env('MEDIA_URL')) {
+            return $url;
+        }
 
-      $media = Media::createFromURL($url, $maxSize);
+        $media = Media::createFromURL($url, $maxSize);
 
-      if($media && is_object($media)) {
-        $entry->media()->attach($media->id);
-        return $media;
-      } else {
-        Log::info('Failed to download file ('.$url.')');
-        return $url;
-      }
+        if ($media && is_object($media)) {
+            $entry->media()->attach($media->id);
+
+            return $media;
+        } else {
+            Log::info('Failed to download file ('.$url.')');
+
+            return $url;
+        }
     }
 
-    private function _addImageMetaData(&$data, $file, $url) {
-      // Get the image dimensions and add to refs
-      $height = false; $width = false; $bytes = false; $dominant_color = false;
-      if(is_string($file)) {
-        // Fetch the file (from the original URL) and look at the metadata
-        $metadata = $this->_imageMetadata($url);
-        $width = $metadata['width'];
-        $height = $metadata['height'];
-        $bytes = $metadata['bytes'];
-      } else {
-        // the download function already creates a media object which has
-        // stored the size of the image in the database
-        $width = $file->width;
-        $height = $file->height;
-        $bytes = $file->bytes;
-      }
+    private function _addImageMetaData(&$data, $file, $url)
+    {
+        // Get the image dimensions and add to refs
+        $height = false;
+        $width = false;
+        $bytes = false;
+        $dominant_color = false;
+        if (is_string($file)) {
+            // Fetch the file (from the original URL) and look at the metadata
+            $metadata = $this->_imageMetadata($url);
+            $width = $metadata['width'];
+            $height = $metadata['height'];
+            $bytes = $metadata['bytes'];
+        } else {
+            // the download function already creates a media object which has
+            // stored the size of the image in the database
+            $width = $file->width;
+            $height = $file->height;
+            $bytes = $file->bytes;
+        }
 
-      if($height && $width) {
+        if ($height && $width) {
+            Log::info('Found dimensions of image: '.$url.' '.round($width / $height, 2));
 
-        Log::info('Found dimensions of image: '.$url.' '.round($width / $height, 2));
+            $data['refs'][$url] = [
+                'type' => 'image',
+                'ratio' => round($width / $height, 2),
+            ];
+            if ($bytes) {
+                $data['refs'][$url]['bytes'] = $bytes;
+            }
+            if ($dominant_color) {
+                $data['refs'][$url]['dominant-color'] = $dominant_color;
+            }
+        } else {
+            Log::info('Failed to get dimension of image: '.$url);
+        }
+    }
 
-        $data['refs'][$url] = [
-          'type' => 'image',
-          'ratio' => round($width / $height, 2),
+    private function _imageMetadata($url)
+    {
+        Log::info('Fetching metadata for '.$url);
+
+        $meta = [
+            'width' => false,
+            'height' => false,
+            'bytes' => false,
+            'dominant-color' => false,
         ];
-        if($bytes)
-          $data['refs'][$url]['bytes'] = $bytes;
-        if($dominant_color)
-          $data['refs'][$url]['dominant-color'] = $dominant_color;
-      } else {
-        Log::info('Failed to get dimension of image: '.$url);
-      }
-    }
 
-    private function _imageMetadata($url) {
-      Log::info('Fetching metadata for '.$url);
+        @mkdir(sys_get_temp_dir().'/aperture', 0755);
+        $filedata = tempnam(sys_get_temp_dir().'/aperture', 'file-data');
+        $fd = fopen($filedata, 'w');
 
-      $meta = [
-        'width' => false,
-        'height' => false,
-        'bytes' => false,
-        'dominant-color' => false
-      ];
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_FILE, $fd);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 4000);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
+        curl_exec($ch);
+        fclose($fd);
 
-      @mkdir(sys_get_temp_dir().'/aperture', 0755);
-      $filedata = tempnam(sys_get_temp_dir().'/aperture', 'file-data');
-      $fd = fopen($filedata, 'w');
+        $meta['bytes'] = filesize($filedata);
 
-      $ch = curl_init($url);
-      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-      curl_setopt($ch, CURLOPT_FILE, $fd);
-      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 4000);
-      curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
-      curl_exec($ch);
-      fclose($fd);
+        Log::info('URL '.$url.' has size '.$meta['bytes']);
 
-      $meta['bytes'] = filesize($filedata);
+        try {
+            $fp = fopen($filedata, 'r');
+            $im = new Imagick();
+            $im->readImageFile($fp);
+            $d = $im->getImageGeometry();
 
-      Log::info('URL '.$url.' has size '.$meta['bytes']);
+            $meta['width'] = $d['width'];
+            $meta['height'] = $d['height'];
 
-      try {
-        $fp = fopen($filedata, 'r');
-        $im = new Imagick();
-        $im->readImageFile($fp);
-        $d = $im->getImageGeometry();
+            //$meta['dominant-color'] = '#000000';
+        } catch (\Exception $e) {
+            Log::info('Failed to get metadata for '.$url);
+        }
 
-        $meta['width'] = $d['width'];
-        $meta['height'] = $d['height'];
+        @unlink($filedata);
 
-      #$meta['dominant-color'] = '#000000';
-
-      } catch(\Exception $e) {
-        Log::info('Failed to get metadata for '.$url);
-      }
-
-      @unlink($filedata);
-
-      return $meta;
+        return $meta;
     }
 }

@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class AddSourceName extends Migration
 {
@@ -15,7 +15,7 @@ class AddSourceName extends Migration
     {
         Schema::table('sources', function (Blueprint $table) {
             $table->string('name', 512)->default('');
-        });        
+        });
     }
 
     /**
@@ -27,6 +27,6 @@ class AddSourceName extends Migration
     {
         Schema::table('sources', function (Blueprint $table) {
             $table->dropColumn('name');
-        });        
+        });
     }
 }

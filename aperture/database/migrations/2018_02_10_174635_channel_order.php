@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 use App\User;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class ChannelOrder extends Migration
 {
@@ -19,18 +19,18 @@ class ChannelOrder extends Migration
         });
 
         $users = User::all();
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $channels = $user->channels()
               ->orderByDesc(DB::raw('uid = "default"'))
               ->orderByDesc(DB::raw('uid = "notifications"'))
               ->orderBy('name')
               ->get();
-            foreach($channels as $i=>$channel) {
+
+            foreach ($channels as $i => $channel) {
                 $channel->sort = $i;
                 $channel->save();
             }
         }
-
     }
 
     /**

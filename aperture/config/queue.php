@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Default Queue Driver
@@ -29,7 +28,6 @@ return [
     */
 
     'connections' => [
-
         'sync' => [
             'driver' => 'sync',
         ],
@@ -63,7 +61,6 @@ return [
             'queue' => parse_url(env('APP_URL'), PHP_URL_HOST),
             'retry_after' => 90,
         ],
-
     ],
 
     /*
@@ -81,5 +78,4 @@ return [
         'database' => env('DB_CONNECTION', 'mysql'),
         'table' => 'failed_jobs',
     ],
-
 ];

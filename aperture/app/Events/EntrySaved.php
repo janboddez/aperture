@@ -1,19 +1,20 @@
 <?php
+
 namespace App\Events;
 
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Foundation\Events\Dispatchable;
 use App\Entry;
-use Log;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
 
 class EntrySaved
 {
-  use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
-  public $entry;
+    public $entry;
 
-  public function __construct(Entry $entry)
-  {
-    $this->entry = $entry;
-  }
+    public function __construct(Entry $entry)
+    {
+        $this->entry = $entry;
+    }
 }

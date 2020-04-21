@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class StoreMicropubConfig extends Migration
 {
@@ -13,10 +13,10 @@ class StoreMicropubConfig extends Migration
      */
     public function up()
     {
-      Schema::table('users', function (Blueprint $table) {
-        $table->text('micropub_config')->nullable();
-        $table->string('micropub_endpoint', 255)->default('');
-      });
+        Schema::table('users', function (Blueprint $table) {
+            $table->text('micropub_config')->nullable();
+            $table->string('micropub_endpoint', 255)->default('');
+        });
     }
 
     /**
@@ -26,9 +26,9 @@ class StoreMicropubConfig extends Migration
      */
     public function down()
     {
-      Schema::table('users', function (Blueprint $table) {
-        $table->dropColumn('micropub_config');
-        $table->dropColumn('micropub_endpoint');
-      });
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('micropub_config');
+            $table->dropColumn('micropub_endpoint');
+        });
     }
 }

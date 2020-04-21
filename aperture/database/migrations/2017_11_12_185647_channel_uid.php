@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class ChannelUid extends Migration
 {
@@ -16,7 +16,7 @@ class ChannelUid extends Migration
         Schema::table('channels', function (Blueprint $table) {
             $table->string('uid', 512);
             $table->index(['user_id', 'uid']);
-        });        
+        });
     }
 
     /**
@@ -28,6 +28,6 @@ class ChannelUid extends Migration
     {
         Schema::table('channels', function (Blueprint $table) {
             $table->dropColumn('uid');
-        });        
+        });
     }
 }

@@ -2,7 +2,8 @@
 
 namespace App\Events;
 
-use App\User, App\Channel;
+use App\Channel;
+use App\User;
 
 class UserCreated
 {

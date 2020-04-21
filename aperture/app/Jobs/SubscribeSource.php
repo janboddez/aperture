@@ -5,17 +5,19 @@ namespace App\Jobs;
 use App\Channel;
 use App\Events\SourceAdded;
 use App\Source;
-use App\User;
 use Celd\Opml\Model\Feed;
 use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
 class SubscribeSource implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     protected $channelId;
     protected $feed;
@@ -44,7 +46,7 @@ class SubscribeSource implements ShouldQueue
             return;
         }
 
-        if ($this->feed->getType() === 'microformats') {
+        if ('microformats' === $this->feed->getType()) {
             $source = Source::where('url', $this->feed->getHtmlUrl())->first();
         } else {
             $source = Source::where('url', $this->feed->getXmlUrl())->first();
@@ -54,7 +56,7 @@ class SubscribeSource implements ShouldQueue
             $source = new Source();
             $source->created_by = $channel->user_id;
 
-            if ($this->feed->getType() === 'microformats') {
+            if ('microformats' === $this->feed->getType()) {
                 $source->url = $this->feed->getHtmlUrl() ?? $this->feed->getXmlUrl();
             } else {
                 $source->url = $this->feed->getXmlUrl();
@@ -67,7 +69,7 @@ class SubscribeSource implements ShouldQueue
             $source->save();
         }
 
-        if ($channel->sources()->where('source_id', $source->id)->count() === 0) {
+        if (0 === $channel->sources()->where('source_id', $source->id)->count()) {
             $channel->sources()->attach($source->id, ['created_at' => date('Y-m-d H:i:s')]);
             $channel->sources()->updateExistingPivot($source->id, ['name' => $this->feed->getTitle()]);
         }
