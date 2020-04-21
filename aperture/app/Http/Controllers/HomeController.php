@@ -44,7 +44,7 @@ class HomeController extends Controller
 
             return view('channel', [
                 'channel' => $channel,
-                'sources' => $sources,
+                'sources' => $sources->sortBy('domain'),
             ]);
         } else {
             abort(401);

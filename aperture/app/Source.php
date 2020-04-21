@@ -55,4 +55,9 @@ class Source extends Model
             'name' => $name,
         ];
     }
+
+    public function getDomainAttribute()
+    {
+        return str_replace('www.', '', parse_url($this->url, PHP_URL_HOST));
+    }
 }
