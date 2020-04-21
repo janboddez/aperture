@@ -182,9 +182,7 @@ $('#import-opml-modal input[name="opml"]').change(function(){
 $('#new-channel-modal input[type="text"]').keypress(function(e){
   if(e.keyCode == 13){
     e.preventDefault();
-    if($(this).val()) {
-      $('#new-channel-modal .button[type="submit"]').click();
-    }
+    $('#new-channel-modal button[type="submit"]').click();
   }
 });
 </script>
