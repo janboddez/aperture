@@ -3,7 +3,7 @@
 Route::middleware('web')->group(function () {
     Route::get('/', function () {
         if (Auth::check()) {
-            return view('dashboard');
+            return redirect('dashboard');
         }
         return view('welcome');
     })->name('index');
