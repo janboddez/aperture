@@ -2,544 +2,544 @@
 
 @section('content')
 <section class="section">
-<div class="container channel">
+    <div class="container channel">
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="{{ route('dashboard') }}">Channels</a></li>
+                <li class="is-active"><a href="#" aria-current="page">{{ $channel->name }}</a></li>
+            </ul>
+        </nav>
 
-  <nav class="breadcrumb" aria-label="breadcrumbs">
-    <ul>
-      <li><a href="{{ route('dashboard') }}">Channels</a></li>
-      <li class="is-active"><a href="#" aria-current="page">{{ $channel->name }}</a></li>
-    </ul>
-  </nav>
+        <div class="buttons is-right">
+            <a href="#" id="channel-settings" class="button">Settings</a>
+            <a href="#" id="new-apikey" class="button">New API Key</a>
+            <a href="#" id="new-source" class="button is-primary">New Source</a>
+        </div>
 
-  <div class="buttons is-right">
-    <a href="#" id="channel-settings" class="button">Settings</a>
-    <a href="#" id="new-apikey" class="button">New API Key</a>
-    <a href="#" id="new-source" class="button is-primary">New Source</a>
-  </div>
+        <h1 class="title">{{ $channel->name }}</h1>
 
-  <h1 class="title">{{ $channel->name }}</h1>
+        @foreach($sources as $source)
+            <div class="source">
+                <div class="buttons is-right">
+                    <a href="#" class="button is-small source-settings" data-source="{{ $source->id }}">Settings</a>
+                    <a href="#" class="button is-small remove" data-source="{{ $source->id }}">Remove</a>
+                </div>
 
-  @foreach($sources as $source)
-    <div class="source">
-      <div class="buttons is-right">
-        <a href="#" class="button is-small source-settings" data-source="{{ $source->id }}">Settings</a>
-        <a href="#" class="button is-small remove" data-source="{{ $source->id }}">Remove</a>
-      </div>
+                <h2>{{ $source->pivot->name ? $source->pivot->name : parse_url($source->url, PHP_URL_HOST) }}</h2>
 
-      <h2>{{ $source->pivot->name ? $source->pivot->name : parse_url($source->url, PHP_URL_HOST) }}</h2>
+                <div class="source-stats">
+                    @if ($source->name)
+                        <span>{{ $source->name }}</span>
+                        &bull;
+                    @elseif ($source->url)
+                        <span>{{ parse_url($source->url, PHP_URL_HOST) }}</span>
+                        &bull;
+                    @endif
+                    @if ($source->format)
+                        <span>{{ $source->format }}</span>
+                        &bull;
+                    @endif
+                        <span>{{ $source->entries_count }} entries</span>
+                    @if ($source->websub)
+                        &bull;
+                        <span>websub enabled</span>
+                    @endif
+                </div>
 
-      <div class="source-stats">
-        @if($source->name)
-          <span>{{ $source->name }}</span>
-          &bull;
-        @elseif($source->url)
-          <span>{{ parse_url($source->url, PHP_URL_HOST) }}</span>
-          &bull;
-        @endif
-        @if($source->format)
-          <span>{{ $source->format }}</span>
-          &bull;
-        @endif
-        <span>{{ $source->entries_count }} entries</span>
-        @if($source->websub)
-          &bull;
-          <span>websub enabled</span>
-        @endif
-      </div>
+                @if ($source->format === 'apikey')
+                    <div><code class="hidden-secret">{{ $source->token }}</code></div>
+                    <p class="help">Use this API key to create entries in this channel with a POST request. See <a href="/docs">the documentation</a> for more details.</p>
+                @endif
 
-      @if($source->format == 'apikey')
-        <div><code class="hidden-secret">{{ $source->token }}</code></div>
-        <p class="help">Use this API key to create entries in this channel with a POST request. See <a href="/docs">the documentation</a> for more details.</p>
-      @endif
-
-      <data class="source-name" value="{{ $source->pivot->name }}"></data>
-      <data class="source-url" value="{{ $source->url }}"></data>
-      <data class="source-format" value="{{ $source->format }}"></data>
-      <data class="source-entries-count" value="{{ $source->entries_count }}"></data>
+                <data class="source-name" value="{{ $source->pivot->name }}"></data>
+                <data class="source-url" value="{{ $source->url }}"></data>
+                <data class="source-format" value="{{ $source->format }}"></data>
+                <data class="source-entries-count" value="{{ $source->entries_count }}"></data>
+            </div>
+        @endforeach
     </div>
-  @endforeach
-
-</div>
 </section>
 
 <div class="modal" id="new-source-modal">
-  <div class="modal-background"></div>
-  <div class="modal-card">
-    <header class="modal-card-head">
-      <p class="modal-card-title">Add a Source</p>
-      <button class="delete" aria-label="close"></button>
-    </header>
-    <section class="modal-card-body">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Add a Source</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
 
-      <div class="field">
-        <div class="control">
-          <input class="input" type="url" placeholder="https://example.com/" id="source-url" required="required">
-        </div>
-        <p class="help">Enter a URL to follow (HTML, JSONFeed, Atom, RSS)</p>
-      </div>
-      <button class="button is-primary" type="submit" id="new-source-find-feeds-btn">Find Feeds</button>
+        <section class="modal-card-body">
+            <div class="field">
+                <div class="control">
+                <input class="input" type="url" placeholder="https://example.com/" id="source-url" required="required">
+                </div>
+                <p class="help">Enter a URL to follow (HTML, JSONFeed, Atom, RSS)</p>
+            </div>
+            <button class="button is-primary" type="submit" id="new-source-find-feeds-btn">Find Feeds</button>
 
-      <div id="new-source-feeds" class="hidden">
-        <p class="info-text"></p>
-        <ul></ul>
-      </div>
+            <div id="new-source-feeds" class="hidden">
+                <p class="info-text"></p>
+                <ul></ul>
+            </div>
+        </section>
 
-    </section>
-    <footer class="modal-card-foot">
-    </footer>
-  </div>
+        <footer class="modal-card-foot"></footer>
+    </div>
 </div>
 
 <div class="modal" id="new-apikey-modal">
-  <div class="modal-background"></div>
-  <div class="modal-card">
-    <header class="modal-card-head">
-      <p class="modal-card-title">Add an API Key</p>
-      <button class="delete" aria-label="close"></button>
-    </header>
-    <section class="modal-card-body">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Add an API Key</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
 
-      <div class="field">
-        <div class="control">
-          <label class="label">Name</label>
-          <input class="input" type="text" name="name" id="new-apikey-name" required="required">
-          <p class="help">For your informational purposes only.</p>
-        </div>
-      </div>
+        <section class="modal-card-body">
+            <div class="field">
+                <div class="control">
+                <label class="label">Name</label>
+                <input class="input" type="text" name="name" id="new-apikey-name" required="required">
+                <p class="help">For your informational purposes only.</p>
+                </div>
+            </div>
 
-      <p>Adding an API key to the channel allows you to create posts in this channel from other scripts.</p>
+            <p>Adding an API key to the channel allows you to create posts in this channel from other scripts.</p>
+        </section>
 
-    </section>
-    <footer class="modal-card-foot">
-      <button class="button is-primary" type="submit" id="new-apikey-btn">Create</button>
-    </footer>
-  </div>
+        <footer class="modal-card-foot">
+            <button class="button is-primary" type="submit" id="new-apikey-btn">Create</button>
+        </footer>
+    </div>
 </div>
 
 <div class="modal" id="remove-source-modal">
-  <div class="modal-background"></div>
-  <div class="modal-card">
-    <header class="modal-card-head">
-      <p class="modal-card-title">Remove a Source</p>
-      <button class="delete" aria-label="close"></button>
-    </header>
-    <section class="modal-card-body">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Remove a Source</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
 
-      <div>
-        <p class="info-text">Choose whether you like to remove the source and keep existing entries (no new entries from this source will be added), or remove the source and delete everything.</p>
-      </div>
+        <section class="modal-card-body">
+            <div>
+                <p class="info-text">Choose whether you like to remove the source and keep existing entries (no new entries from this source will be added), or remove the source and delete everything.</p>
+            </div>
+        </section>
 
-    </section>
-    <footer class="modal-card-foot">
-      <a href="#" class="remove-future button is-primary">Remove and Keep Old Entries</a>
-      <a href="#" class="remove-all button is-danger">Delete Everything</a>
-    </footer>
-  </div>
+        <footer class="modal-card-foot">
+            <a href="#" class="remove-future button is-primary">Remove and Keep Old Entries</a>
+            <a href="#" class="remove-all button is-danger">Delete Everything</a>
+        </footer>
+    </div>
 </div>
 
 <div class="modal" id="source-settings-modal">
-  <div class="modal-background"></div>
-  <div class="modal-card">
+    <div class="modal-background"></div>
+    <div class="modal-card">
 
-    <header class="modal-card-head">
-      <p class="modal-card-title">Source Settings</p>
-      <button class="delete" aria-label="close"></button>
-    </header>
-    <section class="modal-card-body">
+        <header class="modal-card-head">
+        <p class="modal-card-title">Source Settings</p>
+        <button class="delete" aria-label="close"></button>
+        </header>
 
-      <div id="channel-settings-section">
-        <div class="field">
-          <div class="control">
-            <label class="label">Name</label>
-            <input class="input" type="text" name="name" id="source-name" required="required" value="">
-          </div>
-        </div>
-        <div class="field">
-          <div class="control">
-            <label class="label">URL</label>
-            <input class="input" type="text" name="url" id="source-url-readonly" readonly="readonly" value="">
-          </div>
-        </div>
-      </div>
+        <section class="modal-card-body">
+            <div id="channel-settings-section">
+                <div class="field">
+                <div class="control">
+                    <label class="label">Name</label>
+                    <input class="input" type="text" name="name" id="source-name" required="required" value="">
+                </div>
+                </div>
+                <div class="field">
+                <div class="control">
+                    <label class="label">URL</label>
+                    <input class="input" type="text" name="url" id="source-url-readonly" readonly="readonly" value="">
+                </div>
+                </div>
+            </div>
+        </section>
 
-    </section>
-    <footer class="modal-card-foot">
-      <a href="#" class="button save is-primary">Save</a>
-    </footer>
-
-  </div>
+        <footer class="modal-card-foot">
+            <a href="#" class="button save is-primary">Save</a>
+        </footer>
+    </div>
 </div>
 
 <div class="modal" id="channel-settings-modal">
-  <div class="modal-background"></div>
-  <div class="modal-card">
-    <header class="modal-card-head">
-      <p class="modal-card-title">Channel Settings</p>
-      <button class="delete" aria-label="close"></button>
-    </header>
-    <section class="modal-card-body">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Channel Settings</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
 
-      <div id="channel-settings-section">
-        <div class="field">
-          <div class="control">
-            <label class="label">Name</label>
-            <input class="input" type="text" name="name" id="channel-name" required="required" value="{{ $channel->name }}">
-          </div>
-        </div>
+        <section class="modal-card-body">
+            <div id="channel-settings-section">
+                <div class="field">
+                    <div class="control">
+                        <label class="label">Name</label>
+                        <input class="input" type="text" name="name" id="channel-name" required="required" value="{{ $channel->name }}">
+                    </div>
+                </div>
 
-        <div class="field">
-          <div class="control">
-            <label class="label">UID</label>
-            <input class="input" type="text" readonly="readonly" id="channel-uid" value="{{ $channel->uid }}">
-          </div>
-        </div>
+                <div class="field">
+                    <div class="control">
+                        <label class="label">UID</label>
+                        <input class="input" type="text" readonly="readonly" id="channel-uid" value="{{ $channel->uid }}">
+                    </div>
+                </div>
 
-        <div class="field">
-          <div class="control">
-            <label class="label">Read Tracking</label>
-            <div class="select">
-              <select id="channel-read-tracking-mode">
-                <option value="count" {{ $channel->read_tracking_mode == 'count' ? 'selected="selected"' : '' }}>Show Unread Count</option>
-                <option value="boolean" {{ $channel->read_tracking_mode == 'boolean' ? 'selected="selected"' : '' }}>Show Unread Indicator</option>
-                <option value="disabled" {{ $channel->read_tracking_mode == 'disabled' ? 'selected="selected"' : '' }}>Disabled</option>
-              </select>
+                <div class="field">
+                    <div class="control">
+                        <label class="label">Read Tracking</label>
+                        <div class="select">
+                        <select id="channel-read-tracking-mode">
+                            <option value="count" {{ $channel->read_tracking_mode === 'count' ? 'selected="selected"' : '' }}>Show Unread Count</option>
+                            <option value="boolean" {{ $channel->read_tracking_mode === 'boolean' ? 'selected="selected"' : '' }}>Show Unread Indicator</option>
+                            <option value="disabled" {{ $channel->read_tracking_mode === 'disabled' ? 'selected="selected"' : '' }}>Disabled</option>
+                        </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="control">
+                        <label class="label">Include</label>
+                        <div class="select">
+                            <select id="channel-include-only">
+                                <option value="" {{ $channel->include_only === '' ? 'selected="selected"' : '' }}>Everything</option>
+                                <option value="photos_videos" {{ $channel->include_only === 'photos_videos' ? 'selected="selected"' : '' }}>Only Photos and Videos</option>
+                                <option value="articles" {{ $channel->include_only === 'articles' ? 'selected="selected"' : '' }}>Only Articles</option>
+                                <option value="checkins" {{ $channel->include_only === 'checkins' ? 'selected="selected"' : '' }}>Only Checkins</option>
+                                <option value="reposts" {{ $channel->include_only === 'reposts' ? 'selected="selected"' : '' }}>Only Reposts</option>
+                            </select>
+                        </div>
+
+                        <input class="input" type="text" id="channel-include-keywords" value="{{ $channel->include_keywords }}" placeholder="enter keywords to require (space-separated)" style="margin-top: 6px;">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="control">
+                        <label class="label">Exclude</label>
+
+                        <div>
+                            <label class="checkbox">
+                                <input type="checkbox" id="exclude-reposts" {{ in_array('repost', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
+                                Reposts
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="checkbox">
+                                <input type="checkbox" id="exclude-likes" {{ in_array('like', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
+                                Likes
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="checkbox">
+                                <input type="checkbox" id="exclude-replies" {{ in_array('reply', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
+                                Replies
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="checkbox">
+                                <input type="checkbox" id="exclude-bookmarks" {{ in_array('bookmark', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
+                                Bookmarks
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="checkbox">
+                                <input type="checkbox" id="exclude-checkins" {{ in_array('checkin', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
+                                Checkins
+                            </label>
+                        </div>
+
+                        <input class="input" type="text" id="channel-exclude-keywords" value="{{ $channel->exclude_keywords }}" placeholder="enter keywords to block (space-separated)" style="margin-top: 6px;">
+                    </div>
+                </div>
+
+                @if ($destinations=Auth::user()->get_micropub_config('destination'))
+                    <div class="field">
+                        <div class="control">
+                            <label class="label">Default Destination</label>
+                            <div class="select">
+                                <select id="default-destination">
+                                    @foreach($destinations as $dest)
+                                    <option value="{{ $dest['uid'] }}" {{ $channel->default_destination === $dest['uid'] ? 'selected="selected"' : '' }}>{{ $dest['name'] }}</option>
+                                    @endforeach
+                                    <option value="none" {{ $channel->default_destination === 'none' ? 'selected="selected"' : '' }}>None (Responses Disabled)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if (Auth::user()->retention_days === 0)
+                    <div class="field">
+                        <div class="control">
+                            <label class="label">Days to Keep Entries</label>
+                            <div class="select">
+                                <select id="retention-days">
+                                    @foreach ([0, 1, 2, 3, 7, 14, 30] as $day)
+                                        <option value="{{ $day }}" {{ $channel->retention_days === $day ? 'selected="selected"' : '' }}>{{ $day === 0 ? 'Unlimited' : $day }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="field">
+                    <div class="control">
+                        <div>
+                            <label class="checkbox">
+                                <input type="checkbox" id="hide-in-demo-mode" {{ $channel->hide_in_demo_mode ? 'checked="checked"' : '' }}>
+                                Hide this channel when account is in "Demo Mode"
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="control">
+                        <div>
+                            <label class="checkbox">
+                                <input type="checkbox" id="channel-archived" {{ $channel->archived ? 'checked="checked"' : '' }}>
+                                Archive channel (The channel will be hidden until it is un-archived.)
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
 
-        <div class="field">
-          <div class="control">
-            <label class="label">Include</label>
-            <div class="select">
-              <select id="channel-include-only">
-                <option value="" {{ $channel->include_only == '' ? 'selected="selected"' : '' }}>Everything</option>
-                <option value="photos_videos" {{ $channel->include_only == 'photos_videos' ? 'selected="selected"' : '' }}>Only Photos and Videos</option>
-                <option value="articles" {{ $channel->include_only == 'articles' ? 'selected="selected"' : '' }}>Only Articles</option>
-                <option value="checkins" {{ $channel->include_only == 'checkins' ? 'selected="selected"' : '' }}>Only Checkins</option>
-                <option value="reposts" {{ $channel->include_only == 'reposts' ? 'selected="selected"' : '' }}>Only Reposts</option>
-              </select>
+            <div id="delete-channel-confirm" class="hidden">
+                <p class="info-text">Are you sure you want to delete this channel? All data in this channel will be deleted, and all subscriptions in this channel will be removed.</p>
             </div>
+        </section>
 
-            <input class="input" type="text" id="channel-include-keywords" value="{{ $channel->include_keywords }}" placeholder="enter keywords to require (space-separated)" style="margin-top: 6px;">
-          </div>
-        </div>
-
-        <div class="field">
-          <div class="control">
-            <label class="label">Exclude</label>
-
-            <div>
-              <label class="checkbox">
-                <input type="checkbox" id="exclude-reposts" {{ in_array('repost', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
-                Reposts
-              </label>
-            </div>
-
-            <div>
-              <label class="checkbox">
-                <input type="checkbox" id="exclude-likes" {{ in_array('like', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
-                Likes
-              </label>
-            </div>
-
-            <div>
-              <label class="checkbox">
-                <input type="checkbox" id="exclude-replies" {{ in_array('reply', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
-                Replies
-              </label>
-            </div>
-
-            <div>
-              <label class="checkbox">
-                <input type="checkbox" id="exclude-bookmarks" {{ in_array('bookmark', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
-                Bookmarks
-              </label>
-            </div>
-
-            <div>
-              <label class="checkbox">
-                <input type="checkbox" id="exclude-checkins" {{ in_array('checkin', $channel->excluded_types()) ? 'checked="checked"' : '' }}>
-                Checkins
-              </label>
-            </div>
-
-            <input class="input" type="text" id="channel-exclude-keywords" value="{{ $channel->exclude_keywords }}" placeholder="enter keywords to block (space-separated)" style="margin-top: 6px;">
-
-          </div>
-        </div>
-
-        @if($destinations=Auth::user()->get_micropub_config('destination'))
-        <div class="field">
-          <div class="control">
-            <label class="label">Default Destination</label>
-            <div class="select">
-              <select id="default-destination">
-                @foreach($destinations as $dest)
-                  <option value="{{ $dest['uid'] }}" {{ $channel->default_destination == $dest['uid'] ? 'selected="selected"' : '' }}>{{ $dest['name'] }}</option>
-                @endforeach
-                <option value="none" {{ $channel->default_destination == 'none' ? 'selected="selected"' : '' }}>None (Responses Disabled)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        @endif
-
-        @if(Auth::user()->retention_days == 0)
-        <div class="field">
-          <div class="control">
-            <label class="label">Days to Keep Entries</label>
-            <div class="select">
-              <select id="retention-days">
-                @foreach([0,1,2,3,7,14,30] as $day)
-                  <option value="{{ $day }}" {{ $channel->retention_days == $day ? 'selected="selected"' : '' }}>{{ $day == '0' ? 'Unlimited' : $day }}</option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-        </div>
-        @endif
-
-        <div class="field">
-          <div class="control">
-            <div>
-              <label class="checkbox">
-                <input type="checkbox" id="hide-in-demo-mode" {{ $channel->hide_in_demo_mode ? 'checked="checked"' : '' }}>
-                Hide this channel when account is in "Demo Mode"
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="field">
-          <div class="control">
-            <div>
-              <label class="checkbox">
-                <input type="checkbox" id="channel-archived" {{ $channel->archived ? 'checked="checked"' : '' }}>
-                Archive channel (The channel will be hidden until it is un-archived.)
-              </label>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <div id="delete-channel-confirm" class="hidden">
-        <p class="info-text">Are you sure you want to delete this channel? All data in this channel will be deleted, and all subscriptions in this channel will be removed.</p>
-      </div>
-
-    </section>
-    <footer class="modal-card-foot">
-      <a href="#" class="button save is-primary">Save</a>
-      @if(!in_array($channel->uid, ['notifications']))
-        <div style="float:right;"><a href="#" class="button is-danger delete-prompt">Delete</a></div>
-      @endif
-    </footer>
-  </div>
+        <footer class="modal-card-foot">
+            <a href="#" class="button save is-primary">Save</a>
+            @if (! in_array($channel->uid, ['notifications']))
+                <div style="float:right;"><a href="#" class="button is-danger delete-prompt">Delete</a></div>
+            @endif
+        </footer>
+    </div>
 </div>
-
 @endsection
 
 @section('scripts')
 <script>
-var channel_id = {{ $channel->id }};
+    var channel_id = {{ $channel->id }};
 
-$(function(){
-  $('#new-source').click(function(e){
-    $("#new-source-feeds ul").empty();
-    $("#source-url").val("");
-    $("#new-source-find-feeds-btn").addClass("is-primary");
-    $('#new-source-modal').addClass('is-active');
-    $("#source-url").focus();
-    e.preventDefault();
-  });
-  $('#new-apikey').click(function(e){
-    $('#new-apikey-modal').addClass('is-active');
-    $('#new-apikey-name').focus();
-    e.preventDefault();
-  });
+    $(function() {
+        $('#new-source').click(function(e) {
+            e.preventDefault();
+            $("#new-source-feeds ul").empty();
+            $("#source-url").val("");
+            $("#new-source-find-feeds-btn").addClass("is-primary");
+            $('#new-source-modal').addClass('is-active');
+            $("#source-url").focus();
+        });
 
-  $('.source-settings').click(function(e){
-    $('#source-name').val($(this).parents(".source").find('.source-name').attr('value'));
-    $('#source-url-readonly').val($(this).parents(".source").find('.source-url').attr('value'));
-    $('#source-settings-modal .save').data("source", $(this).data("source"));
-    $('#source-settings-modal').addClass('is-active');
-    $("#source-name").focus();
-   e.preventDefault();
-  });
+        $('#new-apikey').click(function(e) {
+            e.preventDefault();
+            $('#new-apikey-modal').addClass('is-active');
+            $('#new-apikey-name').focus();
+        });
 
-  $("#source-settings-modal .save").click(function(){
-    $(this).addClass("is-loading");
-    $.post("/channel/{{ $channel->id }}/source/"+$(this).data("source")+"/save", {
-      _token: csrf_token(),
-      name: $("#source-name").val()
-    }, function(response) {
-      reload_window(); // cheap way out
+        $('.source-settings').click(function(e) {
+            e.preventDefault();
+            $('#source-name').val($(this).parents(".source").find('.source-name').attr('value'));
+            $('#source-url-readonly').val($(this).parents(".source").find('.source-url').attr('value'));
+            $('#source-settings-modal .save').data("source", $(this).data("source"));
+            $('#source-settings-modal').addClass('is-active');
+            $("#source-name").focus();
+        });
+
+        $("#source-settings-modal .save").click(function() {
+            $(this).addClass("is-loading");
+            $.post("/channel/{{ $channel->id }}/source/"+$(this).data("source")+"/save", {
+                _token: csrf_token(),
+                name: $("#source-name").val()
+            }, function(response) {
+                reload_window(); // cheap way out
+            });
+        });
+
+        $('#channel-settings').click(function(e) {
+            e.preventDefault();
+            $('#channel-settings-modal').addClass('is-active');
+            $('#channel-name').focus();
+        });
+
+        $("#channel-settings-modal .save").click(function() {
+            var exclude_types = [];
+
+            if (document.getElementById("exclude-reposts").checked) {
+                exclude_types.push("repost");
+            }
+
+            if (document.getElementById("exclude-likes").checked) {
+                exclude_types.push("like");
+            }
+
+            if (document.getElementById("exclude-replies").checked) {
+                exclude_types.push("reply");
+            }
+
+            if (document.getElementById("exclude-bookmarks").checked) {
+                exclude_types.push("bookmark");
+            }
+
+            if (document.getElementById("exclude-checkins").checked) {
+                exclude_types.push("checkin");
+            }
+
+            $(this).addClass("is-loading");
+            $.post("{{ route('save_channel', $channel) }}", {
+                _token: csrf_token(),
+                name: $("#channel-name").val(),
+                read_tracking_mode: $("#channel-read-tracking-mode").val(),
+                include_only: $("#channel-include-only").val(),
+                include_keywords: $("#channel-include-keywords").val(),
+                exclude_types: exclude_types.join(" "),
+                exclude_keywords: $("#channel-exclude-keywords").val(),
+                default_destination: $("#default-destination").val(),
+                hide_in_demo_mode: document.getElementById('hide-in-demo-mode').checked ? 1 : 0,
+                retention_days: $('#retention-days').val(),
+                archived: document.getElementById('channel-archived').checked ? 1 : 0
+            }, function(response) {
+                reload_window();
+            });
+        });
+
+        $("#channel-settings-modal .delete-prompt").click(function() {
+            if ($(this).hasClass("delete-confirm")) {
+                console.log("Deleting channel");
+                $(this).addClass("is-loading");
+                $.post("{{ route('delete_channel', $channel) }}", {
+                    _token: csrf_token()
+                }, function(response) {
+                    window.location = "/dashboard";
+                });
+            } else {
+                $("#channel-settings-section").addClass("hidden");
+                $("#channel-settings-modal .save").addClass("hidden");
+                $("#delete-channel-confirm").removeClass("hidden");
+                $("#channel-settings-modal .delete-prompt")
+                    .removeClass("delete-prompt")
+                    .addClass("delete-confirm").text("Confirm Delete");
+            }
+        });
+
+        $("#new-source-find-feeds-btn").click(function() {
+            $(this).addClass("is-loading");
+            $("#new-source-feeds ul").empty();
+            $.post("{{ route('find_feeds') }}", {
+                _token: csrf_token(),
+                url: $("#source-url").val()
+            }, function(response) {
+                $("#new-source-find-feeds-btn").removeClass("is-loading").removeClass("is-primary");
+                $("#new-source-feeds ul").empty();
+
+                for (var i in response.feeds) {
+                    var feed = response.feeds[i];
+                    $("#new-source-feeds ul").append('<li><h3>'+feed.type+'</h3><div class="url">'+feed.url+'</div><button class="button is-primary" data-url="'+feed.url+'" data-format="'+feed.type+'">Follow</button></li>');
+                }
+
+                if (response.error_description) {
+                    $("#new-source-find-feeds-btn").addClass("is-primary");
+                    $("#new-source-feeds ul").append('<li>'+response.error_description+'</li>');
+                } else if (response.feeds.length === 0) {
+                    $("#new-source-find-feeds-btn").addClass("is-primary");
+                    $("#new-source-feeds ul").append('<li>No feeds were found at the given URL</li>');
+                }
+                bind_follow_buttons();
+                $("#new-source-feeds").removeClass("hidden");
+            })
+        });
+
+        $(".source .remove").click(function(e) {
+            e.preventDefault();
+            $("#remove-source-modal .remove-future").data("source", $(this).data("source"));
+            $("#remove-source-modal .remove-all").data("source", $(this).data("source"));
+            $("#remove-source-modal").addClass("is-active");
+            $("#remove-source-modal .remove-future").focus();
+        });
+
+        $("#remove-source-modal .remove-all").click(function() {
+            $(this).addClass("is-loading");
+            $.post("{{ route('remove_source', $channel) }}", {
+                _token: csrf_token(),
+                source_id: $(this).data("source"),
+                remove_entries: 1
+            }, function(response) {
+                reload_window();
+            });
+        });
+
+        $("#remove-source-modal .remove-future").click(function() {
+            $(this).addClass("is-loading");
+            $.post("{{ route('remove_source', $channel) }}", {
+                _token: csrf_token(),
+                source_id: $(this).data("source"),
+                remove_entries: 0
+            }, function(response) {
+                reload_window();
+            });
+        });
+
+        $("#new-apikey-btn").click(function() {
+            $(this).addClass("is-loading");
+            $.post("/channel/"+channel_id+"/add_apikey", {
+                _token: csrf_token(),
+                name: $("#new-apikey-name").val()
+            }, function(response) {
+                reload_window();
+            });
+        });
     });
-  });
 
-  $('#channel-settings').click(function(e){
-    $('#channel-settings-modal').addClass('is-active');
-    $('#channel-name').focus();
-    e.preventDefault();
-  });
-
-  $("#channel-settings-modal .save").click(function(){
-    var exclude_types = [];
-    if(document.getElementById("exclude-reposts").checked) {
-      exclude_types.push("repost");
-    }
-    if(document.getElementById("exclude-likes").checked) {
-      exclude_types.push("like");
-    }
-    if(document.getElementById("exclude-replies").checked) {
-      exclude_types.push("reply");
-    }
-    if(document.getElementById("exclude-bookmarks").checked) {
-      exclude_types.push("bookmark");
-    }
-    if(document.getElementById("exclude-checkins").checked) {
-      exclude_types.push("checkin");
+    function bind_follow_buttons() {
+        $("#new-source-feeds button").unbind("click").bind("click", function() {
+            $(this).addClass("is-loading");
+            $.post("/channel/"+channel_id+"/add_source", {
+                _token: csrf_token(),
+                url: $(this).data("url"),
+                format: $(this).data("format")
+            }, function(response) {
+                reload_window();
+            });
+        });
     }
 
-    $(this).addClass("is-loading");
-    $.post("{{ route('save_channel', $channel) }}", {
-      _token: csrf_token(),
-      name: $("#channel-name").val(),
-      read_tracking_mode: $("#channel-read-tracking-mode").val(),
-      include_only: $("#channel-include-only").val(),
-      include_keywords: $("#channel-include-keywords").val(),
-      exclude_types: exclude_types.join(" "),
-      exclude_keywords: $("#channel-exclude-keywords").val(),
-      default_destination: $("#default-destination").val(),
-      hide_in_demo_mode: document.getElementById('hide-in-demo-mode').checked ? 1 : 0,
-      retention_days: $('#retention-days').val(),
-      archived: document.getElementById('channel-archived').checked ? 1 : 0
-    }, function(response) {
-      reload_window();
+    $('#new-source-modal input:not([type="submit"])').keypress(function(e) {
+        if (e.keyCode === 13) {
+            $('#new-source-find-feeds-btn').click();
+        }
     });
-  });
 
-  $("#channel-settings-modal .delete-prompt").click(function(){
-    if($(this).hasClass("delete-confirm")) {
-      console.log("Deleting channel");
-      $(this).addClass("is-loading");
-      $.post("{{ route('delete_channel', $channel) }}", {
-        _token: csrf_token()
-      }, function(response) {
-        window.location = "/dashboard";
-      });
-    } else {
-      $("#channel-settings-section").addClass("hidden");
-      $("#channel-settings-modal .save").addClass("hidden");
-      $("#delete-channel-confirm").removeClass("hidden");
-      $("#channel-settings-modal .delete-prompt")
-        .removeClass("delete-prompt")
-        .addClass("delete-confirm").text("Confirm Delete");
-    }
-  });
-
-  $("#new-source-find-feeds-btn").click(function(){
-    $(this).addClass("is-loading");
-    $("#new-source-feeds ul").empty();
-    $.post("{{ route('find_feeds') }}", {
-      _token: csrf_token(),
-      url: $("#source-url").val()
-    }, function(response){
-      $("#new-source-find-feeds-btn").removeClass("is-loading").removeClass("is-primary");
-      $("#new-source-feeds ul").empty();
-      for(var i in response.feeds) {
-        var feed = response.feeds[i];
-        $("#new-source-feeds ul").append('<li><h3>'+feed.type+'</h3><div class="url">'+feed.url+'</div><button class="button is-primary" data-url="'+feed.url+'" data-format="'+feed.type+'">Follow</button></li>');
-      }
-      if(response.error_description) {
-        $("#new-source-find-feeds-btn").addClass("is-primary");
-        $("#new-source-feeds ul").append('<li>'+response.error_description+'</li>');
-      } else if(response.feeds.length == 0) {
-        $("#new-source-find-feeds-btn").addClass("is-primary");
-        $("#new-source-feeds ul").append('<li>No feeds were found at the given URL</li>');
-      }
-      bind_follow_buttons();
-      $("#new-source-feeds").removeClass("hidden");
-    })
-  });
-
-  $(".source .remove").click(function(e){
-    $("#remove-source-modal .remove-future").data("source", $(this).data("source"));
-    $("#remove-source-modal .remove-all").data("source", $(this).data("source"));
-    $("#remove-source-modal").addClass("is-active");
-    $("#remove-source-modal .remove-future").focus();
-    e.preventDefault();
-  });
-
-  $("#remove-source-modal .remove-all").click(function(){
-    $(this).addClass("is-loading");
-    $.post("{{ route('remove_source', $channel) }}", {
-      _token: csrf_token(),
-      source_id: $(this).data("source"),
-      remove_entries: 1
-    }, function(response){
-      reload_window();
+    $('#new-apikey-modal input:not([type="submit"])').keypress(function(e) {
+        if (e.keyCode === 13) {
+            $('#new-apikey-btn').click();
+        }
     });
-  });
 
-  $("#remove-source-modal .remove-future").click(function(){
-    $(this).addClass("is-loading");
-    $.post("{{ route('remove_source', $channel) }}", {
-      _token: csrf_token(),
-      source_id: $(this).data("source"),
-      remove_entries: 0
-    }, function(response){
-      reload_window();
+    $('#channel-settings-modal input:not([type="submit"])').keypress(function(e) {
+        if (e.keyCode === 13) {
+            $('#channel-settings-modal .save').click();
+        }
     });
-  });
 
-  $("#new-apikey-btn").click(function(){
-    $(this).addClass("is-loading");
-    $.post("/channel/"+channel_id+"/add_apikey", {
-      _token: csrf_token(),
-      name: $("#new-apikey-name").val()
-    }, function(response){
-      reload_window();
+    $('#source-settings-modal input:not([type="submit"])').keypress(function(e) {
+        if (e.keyCode === 13) {
+            $('#source-settings-modal .save').click();
+        }
     });
-  });
-
-});
-
-function bind_follow_buttons() {
-  $("#new-source-feeds button").unbind("click").bind("click", function(){
-    $(this).addClass("is-loading");
-    $.post("/channel/"+channel_id+"/add_source", {
-      _token: csrf_token(),
-      url: $(this).data("url"),
-      format: $(this).data("format")
-    }, function(response){
-      reload_window();
-    });
-  });
-}
-
-$('#new-source-modal input[type="url"], #source-settings-modal input[type="text"]').keypress(function(e){
-  if(e.keyCode == 13){
-    $('#new-source-find-feeds-btn').click();
-  }
-});
-
-$('#new-apikey-modal input[type="text"]').keypress(function(e){
-  if(e.keyCode == 13){
-    $('#new-apikey-btn').click();
-  }
-});
-
-$('#channel-settings-modal input[type="text"], #channel-settings-modal input[type="checkbox"], #channel-settings-modal select').keypress(function(e){
-  if(e.keyCode == 13){
-    $('#channel-settings-modal .save').click();
-  }
-});
-
-$('#source-settings-modal input[type="text"]').keypress(function(e){
-  if(e.keyCode == 13){
-    $('#source-settings-modal .save').click();
-  }
-});
 </script>
 @endsection
