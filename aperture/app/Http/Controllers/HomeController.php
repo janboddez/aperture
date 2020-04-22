@@ -44,7 +44,7 @@ class HomeController extends Controller
 
             return view('channel', [
                 'channel' => $channel,
-                'sources' => $sources->sortBy('domain'),
+                'sources' => $sources->sortBy('domain', SORT_NATURAL|SORT_FLAG_CASE),
             ]);
         } else {
             abort(401);

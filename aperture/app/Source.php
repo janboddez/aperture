@@ -58,6 +58,7 @@ class Source extends Model
 
     public function getDomainAttribute()
     {
-        return str_replace('www.', '', parse_url($this->url, PHP_URL_HOST));
+        // return str_replace('www.', '', parse_url($this->url, PHP_URL_HOST));
+        return $this->pivot->name;
     }
 }
