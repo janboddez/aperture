@@ -12,7 +12,7 @@
         --}}
 
         <div class="buttons is-right">
-            <a href="#" id="import-opml" class="button">Import from OPML</a>
+            <a href="#" id="import-opml" class="button">Import OPML</a>
             <a href="#" id="new-channel" class="button is-primary">New Channel</a>
         </div>
 
@@ -80,7 +80,7 @@
             <form action="{{ route('import_opml') }}" method="POST" enctype="multipart/form-data">
                 {{ csrf_field() }}
                 <header class="modal-card-head">
-                    <p class="modal-card-title">Import from OPML</p>
+                    <p class="modal-card-title">Import OPML</p>
                     <button class="delete" aria-label="close"></button>
                 </header>
 
