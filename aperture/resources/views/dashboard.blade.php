@@ -71,12 +71,12 @@
             <p>Then choose a <a href="https://indieweb.org/Microsub#Clients">reader</a> and log in, and the reader will find your subscriptions and data in Aperture.</p>
         </div>
 
-    </div>
-  </section>
+        </div>
+    </section>
 
-  <div class="modal" id="import-opml-modal">
-      <div class="modal-background"></div>
-        <div class="modal-card">
+    <div class="modal" id="import-opml-modal">
+        <div class="modal-background"></div>
+            <div class="modal-card">
             <form action="{{ route('import_opml') }}" method="POST" enctype="multipart/form-data">
                 {{ csrf_field() }}
                 <header class="modal-card-head">
