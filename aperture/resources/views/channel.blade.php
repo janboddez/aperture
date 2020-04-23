@@ -178,21 +178,21 @@
             <div id="channel-settings-section">
                 <div class="field">
                     <div class="control">
-                        <label class="label">Name</label>
+                        <label class="label" for="channel-name">Name</label>
                         <input class="input" type="text" name="name" id="channel-name" required="required" value="{{ $channel->name }}">
                     </div>
                 </div>
 
                 <div class="field">
                     <div class="control">
-                        <label class="label">UID</label>
+                        <label class="label" for="channel-uid">UID</label>
                         <input class="input" type="text" readonly="readonly" id="channel-uid" value="{{ $channel->uid }}">
                     </div>
                 </div>
 
                 <div class="field">
                     <div class="control">
-                        <label class="label">Read Tracking</label>
+                        <label class="label" for="channel-read-tracking-mode">Read Tracking</label>
                         <div class="select">
                         <select id="channel-read-tracking-mode">
                             <option value="count" {{ $channel->read_tracking_mode === 'count' ? 'selected="selected"' : '' }}>Show Unread Count</option>
@@ -205,7 +205,7 @@
 
                 <div class="field">
                     <div class="control">
-                        <label class="label">Include</label>
+                        <label class="label" for="channel-include-only">Include</label>
                         <div class="select">
                             <select id="channel-include-only">
                                 <option value="" {{ $channel->include_only === '' ? 'selected="selected"' : '' }}>Everything</option>
@@ -266,11 +266,11 @@
                 @if ($destinations=Auth::user()->get_micropub_config('destination'))
                     <div class="field">
                         <div class="control">
-                            <label class="label">Default Destination</label>
+                            <label class="label" for="default-destination">Default Destination</label>
                             <div class="select">
                                 <select id="default-destination">
                                     @foreach($destinations as $dest)
-                                    <option value="{{ $dest['uid'] }}" {{ $channel->default_destination === $dest['uid'] ? 'selected="selected"' : '' }}>{{ $dest['name'] }}</option>
+                                        <option value="{{ $dest['uid'] }}" {{ $channel->default_destination === $dest['uid'] ? 'selected="selected"' : '' }}>{{ $dest['name'] }}</option>
                                     @endforeach
                                     <option value="none" {{ $channel->default_destination === 'none' ? 'selected="selected"' : '' }}>None (Responses Disabled)</option>
                                 </select>
@@ -279,10 +279,10 @@
                     </div>
                 @endif
 
-                @if (Auth::user()->retention_days === 0)
+                @if (0 === Auth::user()->retention_days)
                     <div class="field">
                         <div class="control">
-                            <label class="label">Days to Keep Entries</label>
+                            <label class="label" for="retention-days">Days to Keep Entries</label>
                             <div class="select">
                                 <select id="retention-days">
                                     @foreach ([0, 1, 2, 3, 7, 14, 30] as $day)
@@ -343,7 +343,7 @@ $(function() {
         $('#source-url').val('');
         $('#new-source-find-feeds-btn').addClass("is-primary");
         $('#new-source-modal').addClass('is-active');
-        $('#new-source-modal input:not([type="hidden"]):first-of-type').focus();
+        $('#new-source-modal input:not([type="hidden"])').first().focus();
     });
 
     $('#new-apikey').click(function(e) {
@@ -380,23 +380,23 @@ $(function() {
     $('#channel-settings-modal .save').click(function() {
         var exclude_types = [];
 
-        if ($('#exclude-reposts').checked) {
+        if ($('#exclude-reposts').is(':checked')) {
             exclude_types.push('repost');
         }
 
-        if ($('#exclude-likes').checked) {
+        if ($('#exclude-likes').is(':checked')) {
             exclude_types.push('like');
         }
 
-        if ($('#exclude-replies').checked) {
+        if ($('#exclude-replies').is(':checked')) {
             exclude_types.push('reply');
         }
 
-        if ($('#exclude-bookmarks').checked) {
+        if ($('#exclude-bookmarks').is(':checked')) {
             exclude_types.push('bookmark');
         }
 
-        if ($('#exclude-checkins').checked) {
+        if ($('#exclude-checkins:checked').is(':checked')) {
             exclude_types.push('checkin');
         }
 
