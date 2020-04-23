@@ -76,7 +76,7 @@
 
     <div class="modal" id="import-opml-modal">
         <div class="modal-background"></div>
-            <div class="modal-card">
+        <div class="modal-card">
             <form action="{{ route('import_opml') }}" method="POST" enctype="multipart/form-data">
                 {{ csrf_field() }}
                 <header class="modal-card-head">
@@ -130,87 +130,88 @@
 
 @section('scripts')
 <script>
-    $(function() {
-        $('#new-channel').click(function(e) {
-            e.preventDefault();
-            $('#new-channel-modal').addClass('is-active');
-            $("#new-channel-modal input[name='name']").focus();
-        });
-
-        $('#import-opml').click(function(e) {
-            e.preventDefault();
-            $('#import-opml-modal').addClass('is-active');
-            $("#import-opml-modal input[name='opml']").focus();
-        });
-
-        $('#import-opml-modal button[type="submit"]').click(function(e) {
-            if ($('#import-opml-modal input[name="opml"]').get(0).files.length !== 0) {
-                $(this).addClass('is-loading');
-            }
-        });
-
-        $('.channel .sort a').click(function(e) {
-            e.preventDefault();
-
-            if ($(this).hasClass("disabled")) {
-                return;
-            }
-
-            var newOrder;
-
-            if ($(this).data("dir") == "up") {
-                var thisChannel = $($(this).parents(".channel")[0]).data("uid");
-                var prevChannel = $(".channel[data-uid="+thisChannel+"]").prev().data("uid");
-                newOrder = [thisChannel, prevChannel];
-            } else {
-                var thisChannel = $($(this).parents(".channel")[0]).data("uid");
-                var nextChannel = $(".channel[data-uid="+thisChannel+"]").next().data("uid");
-                newOrder = [nextChannel, thisChannel];
-            }
-
-            $.post("/channel/set_order", {
-                channels: newOrder,
-                _token: csrf_token()
-            }, function() {
-                window.location.reload();
-            });
-        });
+$(function() {
+    $('#new-channel').click(function(e) {
+        e.preventDefault();
+        $('#new-channel-modal').addClass('is-active');
+        $('#new-channel-modal input:not([type="hidden"])').first().focus();
     });
 
-    $('#import-opml-modal input[name="opml"]').change(function() {
-        if (this.files.length > 0) {
-            $('#import-opml-modal .file-name').text(this.files[0].name);
+    $('#import-opml').click(function(e) {
+        e.preventDefault();
+        $('#import-opml-modal').addClass('is-active');
+        $('#import-opml-modal input:not([type="hidden"])').first().focus();
+    });
+
+    $('#import-opml-modal button[type="submit"]').click(function(e) {
+        if ($('#import-opml-modal input[name="opml"]').get(0).files.length !== 0) {
+            $(this).addClass('is-loading');
         }
     });
 
-    $('#new-channel-modal input[type="text"]').keypress(function(e) {
-        if (e.keyCode === 13) {
-            e.preventDefault();
-            $('#new-channel-modal button[type="submit"]').click();
+    $('.channel .sort a').click(function(e) {
+        e.preventDefault();
+
+        if ($(this).hasClass("disabled")) {
+            return;
         }
+
+        var newOrder;
+
+        if ($(this).data('dir') === 'up') {
+            var thisChannel = $($(this).parents('.channel')[0]).data('uid');
+            var prevChannel = $('.channel[data-uid='+thisChannel+']').prev().data('uid');
+            newOrder = [thisChannel, prevChannel];
+        } else {
+            var thisChannel = $($(this).parents('.channel')[0]).data('uid');
+            var nextChannel = $('.channel[data-uid='+thisChannel+']').next().data('uid');
+            newOrder = [nextChannel, thisChannel];
+        }
+
+        $.post('/channel/set_order', {
+            channels: newOrder,
+            _token: csrf_token()
+        }, function() {
+            window.location.reload();
+        });
     });
+});
+
+$('#import-opml-modal input[name="opml"]').change(function() {
+    if (this.files.length > 0) {
+        $('#import-opml-modal .file-name').text(this.files[0].name);
+    }
+});
+
+$('#new-channel-modal input[type="text"]').keypress(function(e) {
+    if (e.keyCode === 13) {
+        e.preventDefault();
+        // Force native browser validation
+        $('#new-channel-modal button[type="submit"]').click();
+    }
+});
 </script>
 <style>
-    .helpsection p {
-        margin: 1em 0;
-    }
+.helpsection p {
+    margin: 1em 0;
+}
 
-    .helpsection ul.methods {
-        list-style-type: disc;
-        margin-left: 1em;
-    }
+.helpsection ul.methods {
+    list-style-type: disc;
+    margin-left: 1em;
+}
 
-    .channels .sort {
-        float: right;
-    }
+.channels .sort {
+    float: right;
+}
 
-    .channels .sort a {
-        font-size: 1.1em;
-    }
+.channels .sort a {
+    font-size: 1.1em;
+}
 
-    .channels .sort a.disabled {
-        cursor: auto;
-        color: #ccc;
-    }
+.channels .sort a.disabled {
+    cursor: auto;
+    color: #ccc;
+}
 </style>
 @endsection

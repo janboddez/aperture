@@ -334,212 +334,213 @@
 
 @section('scripts')
 <script>
-    var channel_id = {{ $channel->id }};
+var channel_id = {{ $channel->id }};
 
-    $(function() {
-        $('#new-source').click(function(e) {
-            e.preventDefault();
-            $("#new-source-feeds ul").empty();
-            $("#source-url").val("");
-            $("#new-source-find-feeds-btn").addClass("is-primary");
-            $('#new-source-modal').addClass('is-active');
-            $("#source-url").focus();
-        });
+$(function() {
+    $('#new-source').click(function(e) {
+        e.preventDefault();
+        $('#new-source-feeds ul').empty();
+        $('#source-url').val('');
+        $('#new-source-find-feeds-btn').addClass("is-primary");
+        $('#new-source-modal').addClass('is-active');
+        $('#new-source-modal input:not([type="hidden"]):first-of-type').focus();
+    });
 
-        $('#new-apikey').click(function(e) {
-            e.preventDefault();
-            $('#new-apikey-modal').addClass('is-active');
-            $('#new-apikey-name').focus();
-        });
+    $('#new-apikey').click(function(e) {
+        e.preventDefault();
+        $('#new-apikey-modal').addClass('is-active');
+        $('#new-apikey-modal input:not([type="hidden"])').first().focus();
+    });
 
-        $('.source-settings').click(function(e) {
-            e.preventDefault();
-            $('#source-name').val($(this).parents(".source").find('.source-name').attr('value'));
-            $('#source-url-readonly').val($(this).parents(".source").find('.source-url').attr('value'));
-            $('#source-settings-modal .save').data("source", $(this).data("source"));
-            $('#source-settings-modal').addClass('is-active');
-            $("#source-name").focus();
-        });
+    $('.source-settings').click(function(e) {
+        e.preventDefault();
+        $('#source-name').val($(this).parents('.source').find('.source-name').attr('value'));
+        $('#source-url-readonly').val($(this).parents('.source').find('.source-url').attr('value'));
+        $('#source-settings-modal .save').data('source', $(this).data('source'));
+        $('#source-settings-modal').addClass('is-active');
+        $('#source-settings-modal input:not([type="hidden"])').first().focus();
+    });
 
-        $("#source-settings-modal .save").click(function() {
-            $(this).addClass("is-loading");
-            $.post("/channel/{{ $channel->id }}/source/"+$(this).data("source")+"/save", {
-                _token: csrf_token(),
-                name: $("#source-name").val()
-            }, function(response) {
-                reload_window(); // cheap way out
-            });
-        });
-
-        $('#channel-settings').click(function(e) {
-            e.preventDefault();
-            $('#channel-settings-modal').addClass('is-active');
-            $('#channel-name').focus();
-        });
-
-        $("#channel-settings-modal .save").click(function() {
-            var exclude_types = [];
-
-            if (document.getElementById("exclude-reposts").checked) {
-                exclude_types.push("repost");
-            }
-
-            if (document.getElementById("exclude-likes").checked) {
-                exclude_types.push("like");
-            }
-
-            if (document.getElementById("exclude-replies").checked) {
-                exclude_types.push("reply");
-            }
-
-            if (document.getElementById("exclude-bookmarks").checked) {
-                exclude_types.push("bookmark");
-            }
-
-            if (document.getElementById("exclude-checkins").checked) {
-                exclude_types.push("checkin");
-            }
-
-            $(this).addClass("is-loading");
-            $.post("{{ route('save_channel', $channel) }}", {
-                _token: csrf_token(),
-                name: $("#channel-name").val(),
-                read_tracking_mode: $("#channel-read-tracking-mode").val(),
-                include_only: $("#channel-include-only").val(),
-                include_keywords: $("#channel-include-keywords").val(),
-                exclude_types: exclude_types.join(" "),
-                exclude_keywords: $("#channel-exclude-keywords").val(),
-                default_destination: $("#default-destination").val(),
-                hide_in_demo_mode: document.getElementById('hide-in-demo-mode').checked ? 1 : 0,
-                retention_days: $('#retention-days').val(),
-                archived: document.getElementById('channel-archived').checked ? 1 : 0
-            }, function(response) {
-                reload_window();
-            });
-        });
-
-        $("#channel-settings-modal .delete-prompt").click(function() {
-            if ($(this).hasClass("delete-confirm")) {
-                console.log("Deleting channel");
-                $(this).addClass("is-loading");
-                $.post("{{ route('delete_channel', $channel) }}", {
-                    _token: csrf_token()
-                }, function(response) {
-                    window.location = "/dashboard";
-                });
-            } else {
-                $("#channel-settings-section").addClass("hidden");
-                $("#channel-settings-modal .save").addClass("hidden");
-                $("#delete-channel-confirm").removeClass("hidden");
-                $("#channel-settings-modal .delete-prompt")
-                    .removeClass("delete-prompt")
-                    .addClass("delete-confirm").text("Confirm Delete");
-            }
-        });
-
-        $("#new-source-find-feeds-btn").click(function() {
-            $(this).addClass("is-loading");
-            $("#new-source-feeds ul").empty();
-            $.post("{{ route('find_feeds') }}", {
-                _token: csrf_token(),
-                url: $("#source-url").val()
-            }, function(response) {
-                $("#new-source-find-feeds-btn").removeClass("is-loading").removeClass("is-primary");
-                $("#new-source-feeds ul").empty();
-
-                for (var i in response.feeds) {
-                    var feed = response.feeds[i];
-                    $("#new-source-feeds ul").append('<li><h3>'+feed.type+'</h3><div class="url">'+feed.url+'</div><button class="button is-primary" data-url="'+feed.url+'" data-format="'+feed.type+'">Follow</button></li>');
-                }
-
-                if (response.error_description) {
-                    $("#new-source-find-feeds-btn").addClass("is-primary");
-                    $("#new-source-feeds ul").append('<li>'+response.error_description+'</li>');
-                } else if (response.feeds.length === 0) {
-                    $("#new-source-find-feeds-btn").addClass("is-primary");
-                    $("#new-source-feeds ul").append('<li>No feeds were found at the given URL</li>');
-                }
-                bind_follow_buttons();
-                $("#new-source-feeds").removeClass("hidden");
-            })
-        });
-
-        $(".source .remove").click(function(e) {
-            e.preventDefault();
-            $("#remove-source-modal .remove-future").data("source", $(this).data("source"));
-            $("#remove-source-modal .remove-all").data("source", $(this).data("source"));
-            $("#remove-source-modal").addClass("is-active");
-            $("#remove-source-modal .remove-future").focus();
-        });
-
-        $("#remove-source-modal .remove-all").click(function() {
-            $(this).addClass("is-loading");
-            $.post("{{ route('remove_source', $channel) }}", {
-                _token: csrf_token(),
-                source_id: $(this).data("source"),
-                remove_entries: 1
-            }, function(response) {
-                reload_window();
-            });
-        });
-
-        $("#remove-source-modal .remove-future").click(function() {
-            $(this).addClass("is-loading");
-            $.post("{{ route('remove_source', $channel) }}", {
-                _token: csrf_token(),
-                source_id: $(this).data("source"),
-                remove_entries: 0
-            }, function(response) {
-                reload_window();
-            });
-        });
-
-        $("#new-apikey-btn").click(function() {
-            $(this).addClass("is-loading");
-            $.post("/channel/"+channel_id+"/add_apikey", {
-                _token: csrf_token(),
-                name: $("#new-apikey-name").val()
-            }, function(response) {
-                reload_window();
-            });
+    $('#source-settings-modal .save').click(function() {
+        $(this).addClass('is-loading');
+        $.post('/channel/{{ $channel->id }}/source/'+$(this).data('source')+'/save', {
+            _token: csrf_token(),
+            name: $('#source-name').val()
+        }, function(response) {
+            reload_window(); // cheap way out
         });
     });
 
-    function bind_follow_buttons() {
-        $("#new-source-feeds button").unbind("click").bind("click", function() {
-            $(this).addClass("is-loading");
-            $.post("/channel/"+channel_id+"/add_source", {
-                _token: csrf_token(),
-                url: $(this).data("url"),
-                format: $(this).data("format")
-            }, function(response) {
-                reload_window();
-            });
+    $('#channel-settings').click(function(e) {
+        e.preventDefault();
+        $('#channel-settings-modal').addClass('is-active');
+        $('#channel-settings-modal input:not([type="hidden"])').first().focus();
+    });
+
+    $('#channel-settings-modal .save').click(function() {
+        var exclude_types = [];
+
+        if ($('#exclude-reposts').checked) {
+            exclude_types.push('repost');
+        }
+
+        if ($('#exclude-likes').checked) {
+            exclude_types.push('like');
+        }
+
+        if ($('#exclude-replies').checked) {
+            exclude_types.push('reply');
+        }
+
+        if ($('#exclude-bookmarks').checked) {
+            exclude_types.push('bookmark');
+        }
+
+        if ($('#exclude-checkins').checked) {
+            exclude_types.push('checkin');
+        }
+
+        $(this).addClass('is-loading');
+        $.post('{{ route('save_channel', $channel) }}', {
+            _token: csrf_token(),
+            name: $('#channel-name').val(),
+            read_tracking_mode: $('#channel-read-tracking-mode').val(),
+            include_only: $('#channel-include-only').val(),
+            include_keywords: $('#channel-include-keywords').val(),
+            exclude_types: exclude_types.join(' '),
+            exclude_keywords: $('#channel-exclude-keywords').val(),
+            default_destination: $('#default-destination').val(),
+            hide_in_demo_mode: document.getElementById('hide-in-demo-mode').checked ? 1 : 0,
+            retention_days: $('#retention-days').val(),
+            archived: document.getElementById('channel-archived').checked ? 1 : 0
+        }, function(response) {
+            reload_window();
         });
+    });
+
+    $('#channel-settings-modal .delete-prompt').click(function() {
+        if ($(this).hasClass('delete-confirm')) {
+            console.log('Deleting channel');
+            $(this).addClass('is-loading');
+            $.post('{{ route('delete_channel', $channel) }}', {
+                _token: csrf_token()
+            }, function(response) {
+                window.location = '/dashboard';
+            });
+        } else {
+            $('#channel-settings-section').addClass('hidden');
+            $('#channel-settings-modal .save').addClass('hidden');
+            $('#delete-channel-confirm').removeClass('hidden');
+            $('#channel-settings-modal .delete-prompt')
+                .removeClass('delete-prompt')
+                .addClass('delete-confirm').text('Confirm Delete');
+        }
+    });
+
+    $('#new-source-find-feeds-btn').click(function() {
+        $(this).addClass('is-loading');
+        $('#new-source-feeds ul').empty();
+        $.post('{{ route('find_feeds') }}', {
+            _token: csrf_token(),
+            url: $('#source-url').val()
+        }, function(response) {
+            $('#new-source-find-feeds-btn').removeClass('is-loading').removeClass('is-primary');
+            $('#new-source-feeds ul').empty();
+
+            for (var i in response.feeds) {
+                var feed = response.feeds[i];
+                $('#new-source-feeds ul').append('<li><h3>'+feed.type+'</h3><div class="url">'+feed.url+'</div><button class="button is-primary" data-url="'+feed.url+'" data-format="'+feed.type+'">Follow</button></li>');
+            }
+
+            if (response.error_description) {
+                $('#new-source-find-feeds-btn').addClass('is-primary');
+                $('#new-source-feeds ul').append('<li>'+response.error_description+'</li>');
+            } else if (response.feeds.length === 0) {
+                $('#new-source-find-feeds-btn').addClass('is-primary');
+                $('#new-source-feeds ul').append('<li>No feeds were found at the given URL</li>');
+            }
+
+            bind_follow_buttons();
+            $('#new-source-feeds').removeClass('hidden');
+        })
+    });
+
+    $('.source .remove').click(function(e) {
+        e.preventDefault();
+        $('#remove-source-modal .remove-future').data('source', $(this).data('source'));
+        $('#remove-source-modal .remove-all').data('source', $(this).data('source'));
+        $('#remove-source-modal').addClass('is-active');
+        $('#remove-source-modal .remove-future').focus();
+    });
+
+    $('#remove-source-modal .remove-all').click(function() {
+        $(this).addClass('is-loading');
+        $.post('{{ route('remove_source', $channel) }}', {
+            _token: csrf_token(),
+            source_id: $(this).data('source'),
+            remove_entries: 1
+        }, function(response) {
+            reload_window();
+        });
+    });
+
+    $('#remove-source-modal .remove-future').click(function() {
+        $(this).addClass('is-loading');
+        $.post('{{ route('remove_source', $channel) }}', {
+            _token: csrf_token(),
+            source_id: $(this).data('source'),
+            remove_entries: 0
+        }, function(response) {
+            reload_window();
+        });
+    });
+
+    $('#new-apikey-btn').click(function() {
+        $(this).addClass('is-loading');
+        $.post('/channel/'+channel_id+'/add_apikey', {
+            _token: csrf_token(),
+            name: $('#new-apikey-name').val()
+        }, function(response) {
+            reload_window();
+        });
+    });
+});
+
+function bind_follow_buttons() {
+    $('#new-source-feeds button').unbind('click').bind('click', function() {
+        $(this).addClass('is-loading');
+        $.post('/channel/'+channel_id+'/add_source', {
+            _token: csrf_token(),
+            url: $(this).data('url'),
+            format: $(this).data('format')
+        }, function(response) {
+            reload_window();
+        });
+    });
+}
+
+$('#new-source-modal input:not([type="submit"])').keypress(function(e) {
+    if (e.keyCode === 13) {
+        $('#new-source-find-feeds-btn').click();
     }
+});
 
-    $('#new-source-modal input:not([type="submit"])').keypress(function(e) {
-        if (e.keyCode === 13) {
-            $('#new-source-find-feeds-btn').click();
-        }
-    });
+$('#new-apikey-modal input:not([type="submit"])').keypress(function(e) {
+    if (e.keyCode === 13) {
+        $('#new-apikey-btn').click();
+    }
+});
 
-    $('#new-apikey-modal input:not([type="submit"])').keypress(function(e) {
-        if (e.keyCode === 13) {
-            $('#new-apikey-btn').click();
-        }
-    });
+$('#channel-settings-modal input:not([type="submit"])').keypress(function(e) {
+    if (e.keyCode === 13) {
+        $('#channel-settings-modal .save').click();
+    }
+});
 
-    $('#channel-settings-modal input:not([type="submit"])').keypress(function(e) {
-        if (e.keyCode === 13) {
-            $('#channel-settings-modal .save').click();
-        }
-    });
-
-    $('#source-settings-modal input:not([type="submit"])').keypress(function(e) {
-        if (e.keyCode === 13) {
-            $('#source-settings-modal .save').click();
-        }
-    });
+$('#source-settings-modal input:not([type="submit"])').keypress(function(e) {
+    if (e.keyCode === 13) {
+        $('#source-settings-modal .save').click();
+    }
+});
 </script>
 @endsection
