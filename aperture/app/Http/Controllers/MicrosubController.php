@@ -356,7 +356,7 @@ class MicrosubController extends Controller
 
             $xray = new \p3k\XRay();
             $xray->http = $http;
-            $parsed = $xray->parse(Request::input('url'), ['expect'=>'feed']);
+            $parsed = $xray->parse(Request::input('url'), ['expect' => 'feed']);
 
             if ($parsed && isset($parsed['data']['type']) && 'feed' == $parsed['data']['type']) {
                 $items = $parsed['data']['items'];
@@ -383,7 +383,8 @@ class MicrosubController extends Controller
 
         $entries = $channel->entries()
             ->select('entries.*', 'channel_entry.created_at AS added_to_channel_at', 'channel_entry.batch_order')
-            ->orderByDesc('channel_entry.created_at')
+            // ->orderByDesc('channel_entry.created_at')
+            ->orderByDesc('published')
             ->orderBy('channel_entry.batch_order')
             ->limit($limit + 1); // fetch 1 more than the limit so we know if we've reached the end
 
