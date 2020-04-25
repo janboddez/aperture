@@ -24,7 +24,7 @@ class VerifyIndieAuthAccessToken
     public function handle($request, Closure $next)
     {
         if (! preg_match('/microsub\/(\d+)/', $request->path(), $match)) {
-            return Response::json(['error'=>'not_found'], 404);
+            return Response::json(['error' => 'not_found'], 404);
         }
 
         // Check if this user exists

@@ -44,7 +44,7 @@ $(function() {
     $("#reload-micropub-config").click(function() {
         var btn = $(this);
         btn.addClass("is-loading");
-            $.post("{{ route('reload_micropub_config') }}", {
+        $.post("{{ route('reload_micropub_config') }}", {
             _token: csrf_token(),
         }, function(response) {
             btn.removeClass("is-loading");

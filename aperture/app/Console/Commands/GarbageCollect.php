@@ -20,7 +20,7 @@ class GarbageCollect extends Command
         $this->info('Finding orphaned entries...');
         // Find entries that are not in any channels now
         Entry::select('entries.*')
-            ->leftJoin('channel_entry', ['channel_entry.entry_id'=>'entries.id'])
+            ->leftJoin('channel_entry', ['channel_entry.entry_id' => 'entries.id'])
             ->whereNull('channel_entry.id')
             ->where('entries.currently_in_feed', false)
             ->orderBy('entries.id')
@@ -36,7 +36,7 @@ class GarbageCollect extends Command
 
         $this->info('Finding orphaned files...');
         Media::select('media.*')
-            ->leftJoin('entry_media', ['entry_media.media_id'=>'media.id'])
+            ->leftJoin('entry_media', ['entry_media.media_id' => 'media.id'])
             ->whereNull('entry_media.id')
             ->orderBy('media.id')
             ->chunk(1000, function ($files) {
@@ -49,12 +49,12 @@ class GarbageCollect extends Command
 
         $this->info('Finding orphaned records in channel_entry..');
         $records = DB::table('channel_entry')
-            ->leftJoin('entries', ['channel_entry.entry_id'=>'entries.id'])
+            ->leftJoin('entries', ['channel_entry.entry_id' => 'entries.id'])
             ->whereNull('entries.id')
             ->count();
         $this->info('Found '.$records);
         // $records = DB::table('channel_entry')
-        //     ->leftJoin('entries', ['channel_entry.entry_id'=>'entries.id'])
+        //     ->leftJoin('entries', ['channel_entry.entry_id' => 'entries.id'])
         //     ->whereNull('entries.id')
         //     ->delete();
     }

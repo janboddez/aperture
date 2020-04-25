@@ -5,6 +5,7 @@ Route::middleware('web')->group(function () {
         if (Auth::check()) {
             return redirect('dashboard');
         }
+
         return view('welcome');
     })->name('index');
 

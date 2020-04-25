@@ -107,7 +107,7 @@ class MicropubController extends Controller
         event(new EntrySaved($entry));
 
         if ($new) {
-            if (true == $source->is_new) {
+            if (true === $source->is_new) {
                 $source->is_new = false;
                 $source->save();
             }

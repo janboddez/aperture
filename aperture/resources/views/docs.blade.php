@@ -71,6 +71,7 @@
 .helpsection p {
     margin: 1em 0;
 }
+
 .helpsection ul.methods {
     list-style-type: disc;
     margin-left: 1em;

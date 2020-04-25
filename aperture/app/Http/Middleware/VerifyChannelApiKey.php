@@ -26,7 +26,7 @@ class VerifyChannelApiKey
 
         if ($authorization) {
             if (! preg_match('/Bearer (.+)/', $authorization, $match)) {
-                return Response::json(['error'=>'unauthorized'], 401);
+                return Response::json(['error' => 'unauthorized'], 401);
             }
             $token = $match[1];
         } else {
@@ -34,7 +34,7 @@ class VerifyChannelApiKey
         }
 
         if (! $token) {
-            return Response::json(['error'=>'unauthorized'], 401);
+            return Response::json(['error' => 'unauthorized'], 401);
         }
 
         // Check the cache
@@ -53,7 +53,7 @@ class VerifyChannelApiKey
 
                 $user = User::where('id', $source->created_by)->first();
                 if (! $user) {
-                    return Response::json(['error'=>'not_found'], 404);
+                    return Response::json(['error' => 'not_found'], 404);
                 }
 
                 // If this source is in only one channel, add the channel_id to the token data too
@@ -61,7 +61,7 @@ class VerifyChannelApiKey
                     $token_data['channel_id'] = $source->channels()->first()->id;
                 }
             } else {
-                return Response::json(['error'=>'forbidden'], 403);
+                return Response::json(['error' => 'forbidden'], 403);
             }
 
             Cache::set('token:'.$token, json_encode($token_data), 300);
