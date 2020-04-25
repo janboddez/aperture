@@ -95,8 +95,9 @@ class WebSubReceiverController extends Controller
 
                 $entry_ids[] = $entry->id;
 
-                if (! $entry_is_new) {
+                if ($entry_is_new) {
                     // Log::info("Already seen this item");
+                    continue;
                 }
 
                 Log::info('Adding entry '.$entry->unique.' to channels');
