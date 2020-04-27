@@ -604,7 +604,7 @@ class MicrosubController extends Controller
             $source->save();
         }
 
-        if (0 == $channel->sources()->where('source_id', $source->id)->count()) {
+        if (0 === $channel->sources()->where('source_id', $source->id)->count()) {
             $channel->sources()->attach($source->id, ['created_at'=>date('Y-m-d H:i:s')]);
         }
 
@@ -620,11 +620,14 @@ class MicrosubController extends Controller
     {
         $channel = $this->_getRequestChannel();
 
-        if (Channel::class != get_class($channel)) {
+        if (Channel::class !== get_class($channel)) {
             return $channel;
         }
 
-        $source = Source::where('url', Request::input('url'))->first();
+        $source = Source::where('url', Request::input('url'))
+            // Allow unfollowing by ID, too
+            ->orWhere('id', trim(Request::input('url'), '_'))
+            ->first();
 
         if (! $source) {
             return '';
