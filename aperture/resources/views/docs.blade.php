@@ -5,14 +5,12 @@
     <div class="container">
         <h1 class="title">Documentation</h1>
 
-        <div class="helpsection content">
+        <div class="content">
             <h2 class="subtitle">Configuration</h2>
-
             <p>In order to use Aperture, or any Microsub app, you'll need to sign in using <a href="https://indieauth.net">IndieAuth</a>.</p>
             <p>If you're running WordPress, you can install the <a href="https://wordpress.org/plugins/indieauth/">WordPress IndieAuth plugin</a> to quickly add support for IndieAuth to your website. Otherwise, you can <a href="https://indieweb.org/IndieAuth">check if your CMS supports IndieAuth</a>, or connect your site to an existing <a href="https://indieweb.org/IndieAuth#Services">IndieAuth service</a> or <a href="https://indieweb.org/authorization-endpoint">write your own</a>.</p>
 
             <h3 class="subtitle">Set up using IndieAuth.com</h3>
-
             <p>If your website doesn't already support IndieAuth, the quickest way to get started is to use the hosted <a href="https://indieauth.com">indieauth.com</a> service.</p>
             <p>Add the two HTML tags below to your home page in the <code>&lt;head&gt;</code> section:</p>
 
@@ -26,10 +24,7 @@
 
             <p>Now you'll be able to sign in to Aperture, or any other IndieAuth app!</p>
 
-            <br><br>
-
             <h2 class="subtitle">API Keys</h2>
-
             <p>Adding an API key to a channel will let you use that API key to write posts directly into the channel rather than following an external feed. This is useful if you're writing your own custom integrations, such as adding an entry to a channel every time you receive a <a href="https://webmention.net">Webmention</a>.</p>
             <p>Once you have an API key, you can use it like a Micropub access token. Aperture's API accepts <a href="https://micropub.net">Micropub requests</a> to create content in channels.</p>
 
@@ -41,10 +36,7 @@
 
             <p>See <a href="https://indieweb.org/Micropub">indieweb.org/Micropub</a> for more details on how to make a Micropub request.</p>
 
-            <br><br>
-
             <h2 class="subtitle">Microsub Client Development</h2>
-
             <p>To test API calls, you can generate a token from your token endpoint yourself or by using this <a href="https://gimme-a-token.5eb.nl/">access token tool</a>.</p>
             <p>Your Microsub endpoint is unique to your account, and you can find it on your <a href="/dashboard">dashboard</a>.</p>
             <p>Aperture has implemented the following actions in the <a href="https://indieweb.org/Microsub-spec">Microsub spec</a>:</p>
@@ -68,13 +60,15 @@
 
 @section('scripts')
 <style>
-.helpsection p {
-    margin: 1em 0;
+.content h2,
+.content h3 {
+    font-size: 1.25rem;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
 }
 
-.helpsection ul.methods {
-    list-style-type: disc;
-    margin-left: 1em;
+.content h3:not(:first-child) {
+	margin-top: 1.1428em;
 }
 </style>
 @endsection
