@@ -51,6 +51,7 @@ class Channel extends Model
             'uid' => $this->uid,
             'name' => $this->name,
         ];
+
         switch ($this->read_tracking_mode) {
             case 'count':
                 $array['unread'] = $this->entries()->where('seen', 0)->count();
@@ -59,6 +60,7 @@ class Channel extends Model
                 $array['unread'] = $this->entries()->where('seen', 0)->count() > 0;
                 break;
         }
+
         if ($this->default_destination) {
             $array['destination'] = $this->default_destination;
         }
@@ -75,6 +77,7 @@ class Channel extends Model
                 ->where('entries.source_id', $source->id)
                 ->delete();
         }
+
         $this->sources()->detach($source->id);
         event(new SourceRemoved($source, $this));
     }
@@ -82,9 +85,11 @@ class Channel extends Model
     public function delete()
     {
         $sources = $this->sources()->get();
+
         foreach ($sources as $source) {
             $this->remove_source($source);
         }
+
         parent::delete();
     }
 
@@ -150,6 +155,7 @@ class Channel extends Model
         if ($shouldAdd && $this->include_keywords) {
             $shouldAdd = false;
             $keywords = explode(' ', $this->include_keywords);
+
             foreach ($keywords as $kw) {
                 if ($entry->matches_keyword($kw)) {
                     $shouldAdd = true;
@@ -171,6 +177,7 @@ class Channel extends Model
         if ($this->exclude_keywords) {
             // if the post matches any of the blacklisted terms, reject it now
             $keywords = explode(' ', $this->exclude_keywords);
+
             foreach ($keywords as $kw) {
                 if ($entry->matches_keyword($kw)) {
                     $shouldAdd = false;

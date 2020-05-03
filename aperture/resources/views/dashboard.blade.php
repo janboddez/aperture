@@ -59,7 +59,7 @@
             </div>
         @endif
 
-        <hr>
+        <hr style="margin-top: 1.875rem;">
 
         <div class="helpsection">
             <h3 class="subtitle">Get Started</h3>

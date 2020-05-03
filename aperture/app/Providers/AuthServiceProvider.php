@@ -26,7 +26,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::define('edit-channel', function ($user, $channel) {
-            return $user->id == $channel->user_id;
+            return $user->id === $channel->user_id;
         });
     }
 }

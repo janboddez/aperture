@@ -11,7 +11,6 @@ Route::middleware('web')->group(function () {
 
     Route::get('dashboard', 'HomeController@dashboard')->name('dashboard');
     Route::get('docs', 'PublicController@docs')->name('docs');
-    Route::get('pricing', 'PublicController@pricing')->name('pricing');
 
     Route::get('opml', 'OpmlController@export');
     Route::get('opml/{user_id}', 'OpmlController@exportPublicly');

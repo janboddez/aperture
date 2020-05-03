@@ -3,25 +3,24 @@
 @section('content')
 <section class="section">
     <div class="container dashboard">
-        <h2 class="title">Settings</h2>
+        <h1 class="title">Settings</h1>
 
-        <p>Logged in as {{ Auth::user()->url }}</p>
-
-        @if(session('settings'))
+        @if (session('settings'))
             <div class="notification is-primary">
-            {{ session('settings') }}
+                {{ session('settings') }}
             </div>
         @endif
 
-        <form action="{{ route('settings_save') }}" method="post" style="margin: 20px 0;">
+        <h3 class="subtitle" style="margin-top: 1.5rem;">Demo Mode</h3>
+        <form action="{{ route('settings_save') }}" method="post">
             {{ csrf_field() }}
 
             <div class="field">
                 <label class="checkbox">
                     <input type="checkbox" name="demo_mode_enabled" {{ Auth::user()->demo_mode_enabled ? 'checked="checked"' : '' }}>
-                    Demo Mode
+                    Enable "Demo Mode"
                 </label>
-                <p class="help">Enable "Demo Mode" to hide certain channels from the UI and Microsub clients. Choose which channels are hidden in the channel settings.</p>
+                <p class="help">Hides certain channels from the UI and Microsub clients. Choose which channels are hidden in the channel settings.</p>
             </div>
 
             <div class="control">
@@ -29,10 +28,10 @@
             </div>
         </form>
 
-        <br><br>
+        <hr style="margin-top: 1.875rem;">
 
         <h3 class="subtitle">Micropub Config</h3>
-        <pre style="margin-bottom: 6px;" id="micropub-config">{{ json_encode(json_decode(Auth::user()->micropub_config), JSON_PRETTY_PRINT+JSON_UNESCAPED_SLASHES) }}</pre>
+        <pre style="margin-bottom: 0.875rem;" id="micropub-config">{{ json_encode(json_decode(Auth::user()->micropub_config), JSON_PRETTY_PRINT+JSON_UNESCAPED_SLASHES) }}</pre>
         <div class="control"><button class="button is-primary" id="reload-micropub-config">Reload</button></div>
     </div>
 </section>

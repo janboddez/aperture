@@ -1,8 +1,6 @@
 <nav class="navbar" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
-        <a class="navbar-item" href="/">
-            <img src="/icons/aperture.png" alt="Aperture Logo" width="28" height="28">
-        </a>
+        <a class="navbar-item" href="/"><img src="/icons/aperture.png" alt="Aperture Logo" width="28" height="28"></a>
 
         <div class="navbar-burger burger" data-target="navbar">
             <span></span>
@@ -14,11 +12,11 @@
     <div id="navbar" class="navbar-menu">
         <div class="navbar-start">
             <a href="{{ route('docs') }}" class="navbar-item">Docs</a>
-            {{-- <a href="{{ route('pricing') }}" class="navbar-item">Pricing</a> --}}
         </div>
 
         <div class="navbar-end">
             @auth
+                <span class="navbar-item" style="color: #8a8a8a;">Logged in as {{ Auth::user()->url }}</span>
                 <a href="{{ route('dashboard') }}" class="navbar-item">Dashboard</a>
                 <a href="{{ route('settings') }}" class="navbar-item">Settings</a>
                 <a href="{{ route('logout') }}" class="navbar-item">Log Out</a>

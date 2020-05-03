@@ -8,9 +8,4 @@ class PublicController extends Controller
     {
         return view('docs');
     }
-
-    public function pricing()
-    {
-        return view('pricing');
-    }
 }

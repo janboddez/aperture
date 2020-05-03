@@ -2,10 +2,10 @@
 <html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
+    <title>Aperture</title>
+
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Aperture</title>
 
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet" type="text/css">
 
@@ -136,7 +136,6 @@
     <section class="section api-docs">
         <div class="container content">
             <h2 class="title">Technical Details</h2>
-
             <p>Aperture is a <a href="https://indieweb.org/Microsub">Microsub server</a>. Microsub is a spec that provides a standardized way for reader apps to interact with feeds. By splitting feed parsing and displaying posts into separate parts, a reader app can focus on presenting posts to the user instead of also having to parse feeds. A Microsub <i>server</i> manages the list of people you're following and collects their posts, and a Microsub <i>app</i> shows the posts to the user by fetching them from the server.</p>
             <p>Aperture is just one option for getting started in this ecosystem. You can find a list of other <a href="https://indieweb.org/Microsub#Servers">Microsub servers on indieweb.org</a>, many of which are able to be self-hosted.</p>
             <p>If you're so inclined, you can even <a href="https://indieweb.org/Microsub-spec">write your own</a>! As long as your server supports the <a href="https://indieweb.org/Microsub-spec">Microsub spec</a>, you should be able to use any existing Microsub app with it!</p>
