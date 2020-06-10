@@ -18,7 +18,7 @@ class Source extends Model
 
     public function channels()
     {
-        return $this->belongsToMany('\App\Channel')->withPivot('name');
+        return $this->belongsToMany('\App\Channel')->withPivot(['name', 'site_url', 'fetch_original', 'xpath_selector']);
     }
 
     public function subscribe()

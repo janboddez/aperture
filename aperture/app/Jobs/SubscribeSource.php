@@ -71,7 +71,10 @@ class SubscribeSource implements ShouldQueue
 
         if (0 === $channel->sources()->where('source_id', $source->id)->count()) {
             $channel->sources()->attach($source->id, ['created_at' => date('Y-m-d H:i:s')]);
-            $channel->sources()->updateExistingPivot($source->id, ['name' => $this->feed->getTitle()]);
+            $channel->sources()->updateExistingPivot($source->id, [
+                'name' => $this->feed->getTitle(),
+                'site_url' => $this->feed->getHtmlUrl() ?? null,
+            ]);
         }
 
         event(new SourceAdded($source, $channel));

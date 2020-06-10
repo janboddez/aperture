@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Channel;
 use App\Entry;
 use App\Media;
 use DB;
@@ -53,9 +52,9 @@ class GarbageCollect extends Command
             ->whereNull('entries.id')
             ->count();
         $this->info('Found '.$records);
-        // $records = DB::table('channel_entry')
-        //     ->leftJoin('entries', ['channel_entry.entry_id' => 'entries.id'])
-        //     ->whereNull('entries.id')
-        //     ->delete();
+        DB::table('channel_entry')
+            ->leftJoin('entries', ['channel_entry.entry_id' => 'entries.id'])
+            ->whereNull('entries.id')
+            ->delete();
     }
 }

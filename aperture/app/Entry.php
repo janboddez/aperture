@@ -41,24 +41,27 @@ class Entry extends Model
     public function to_array($channel = false)
     {
         $data = json_decode($this->data, true);
+
+        if ($channel) {
+            $ce = DB::table('channel_entry')
+                ->where('channel_id', $channel->id)
+                ->where('entry_id', $this->id)
+                ->first();
+
+            if (! empty($ce->original_data)) {
+                $data = json_decode($ce->original_data, true);
+            }
+
+            if ('disabled' != $channel->read_tracking_mode) {
+                $data['_is_read'] = (bool) $ce->seen;
+            }
+        }
+
         unset($data['uid']); // don't include mf2 uid in the response
 
         // Include some Microsub info
         $data['_id'] = (string) $this->id;
         $data['_source'] = (string) $this->source_id;
-
-        if ($channel && 'disabled' != $channel->read_tracking_mode) {
-            $ce = DB::table('channel_entry')
-                ->where('channel_id', $channel->id)
-                ->where('entry_id', $this->id)
-                ->first();
-            $data['_is_read'] = (bool) $ce->seen;
-        }
-
-        // For testing, override the JSON published with the DB published
-        if ('testing' == env('APP_ENV')) {
-            $data['published'] = date('c', strtotime($this->published));
-        }
 
         return $data;
     }

@@ -119,6 +119,10 @@ class OpmlController extends Controller
                     $feed->setHtmlUrl($url);
                 } else {
                     $feed->setXmlUrl($url);
+
+                    if ($source->pivot->site_url) {
+                        $feed->setHtmlUrl($source->pivot->site_url);
+                    }
                 }
 
                 $category->addFeed($feed);

@@ -26,7 +26,7 @@ class Channel extends Model
 
     public function sources()
     {
-        return $this->belongsToMany('\App\Source')->withPivot('name');
+        return $this->belongsToMany('\App\Source')->withPivot(['name', 'site_url', 'fetch_original', 'xpath_selector']);
     }
 
     public function entries()

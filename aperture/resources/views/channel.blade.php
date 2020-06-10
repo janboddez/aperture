@@ -52,6 +52,9 @@
                 @endif
 
                 <data class="source-name" value="{{ $source->pivot->name }}"></data>
+                <data class="site-url" value="{{ $source->pivot->site_url }}"></data>
+                <data class="fetch-original" value="{{ $source->pivot->fetch_original }}"></data>
+                <data class="xpath-selector" value="{{ $source->pivot->xpath_selector }}"></data>
                 <data class="source-url" value="{{ $source->url }}"></data>
                 <data class="source-format" value="{{ $source->format }}"></data>
                 <data class="source-entries-count" value="{{ $source->entries_count }}"></data>
@@ -147,10 +150,34 @@
             <div id="channel-settings-section">
                 <div class="field">
                 <div class="control">
-                    <label class="label">Name</label>
-                    <input class="input" type="text" name="name" id="source-name" required="required" value="">
+                    <label class="label" for="source-name">Name</label>
+                    <input class="input" type="text" name="name" id="source-name" value="">
                 </div>
                 </div>
+
+                <div class="field">
+                <div class="control">
+                    <label class="label" for="site-url">Site URL</label>
+                    <input class="input" type="text" name="site_url" id="site-url" value="">
+                </div>
+                </div>
+
+                <div class="field">
+                <div class="control">
+                    <label class="label">
+                    <input class="checkbox" type="checkbox" name="fetch_original" id="fetch-original" value="">
+                    Fetch original content?
+                    </label>
+                </div>
+                </div>
+
+                <div class="field">
+                <div class="control">
+                    <label class="label" for="xpath-selector">XPath Selector</label>
+                    <input class="input" type="text" name="xpath_selector" id="xpath-selector" value="">
+                </div>
+                </div>
+
                 <div class="field">
                 <div class="control">
                     <label class="label">URL</label>
@@ -355,6 +382,9 @@ $(function() {
     $('.source-settings').click(function(e) {
         e.preventDefault();
         $('#source-name').val($(this).parents('.source').find('.source-name').attr('value'));
+        $('#site-url').val($(this).parents('.source').find('.site-url').attr('value'));
+        $('#fetch-original').prop('checked', eval($(this).parents('.source').find('.fetch-original').attr('value')));
+        $('#xpath-selector').val($(this).parents('.source').find('.xpath-selector').attr('value'));
         $('#source-url-readonly').val($(this).parents('.source').find('.source-url').attr('value'));
         $('#source-settings-modal .save').data('source', $(this).data('source'));
         $('#source-settings-modal').addClass('is-active');
@@ -365,7 +395,10 @@ $(function() {
         $(this).addClass('is-loading');
         $.post('/channel/{{ $channel->id }}/source/'+$(this).data('source')+'/save', {
             _token: csrf_token(),
-            name: $('#source-name').val()
+            name: $('#source-name').val(),
+            site_url: $('#site-url').val(),
+            fetch_original: $('#fetch-original').is(':checked'),
+            xpath_selector: $('#xpath-selector').val()
         }, function(response) {
             reload_window(); // cheap way out
         });
@@ -512,7 +545,8 @@ function bind_follow_buttons() {
         $.post('/channel/'+channel_id+'/add_source', {
             _token: csrf_token(),
             url: $(this).data('url'),
-            format: $(this).data('format')
+            format: $(this).data('format'),
+            site_url: $('#source-url').val()
         }, function(response) {
             reload_window();
         });

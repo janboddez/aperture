@@ -60,6 +60,7 @@ class HomeController extends Controller
 
         // Create or load the source
         $source = Source::where('url', Request::input('url'))->first();
+
         if (! $source) {
             $source = new Source();
             $source->created_by = Auth::user()->id;
@@ -71,7 +72,10 @@ class HomeController extends Controller
         }
 
         if (0 === $channel->sources()->where('source_id', $source->id)->count()) {
-            $channel->sources()->attach($source->id, ['created_at' => date('Y-m-d H:i:s')]);
+            $channel->sources()->attach($source->id, [
+                'created_at' => date('Y-m-d H:i:s'),
+                'site_url' => Request::input('site_url'),
+            ]);
         }
 
         event(new SourceAdded($source, $channel));
@@ -128,6 +132,9 @@ class HomeController extends Controller
             ->where('source_id', $source->id)
             ->update([
                 'name' => Request::input('name'),
+                'site_url' => Request::input('site_url'),
+                'fetch_original' => ('true' === Request::input('fetch_original') ? 1 : 0),
+                'xpath_selector' => Request::input('xpath_selector'),
             ]);
 
         return response()->json([
