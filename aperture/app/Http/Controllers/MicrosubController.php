@@ -8,7 +8,6 @@ use App\Events\SourceAdded;
 use App\Source;
 use Auth;
 use DB;
-use Log;
 use Request;
 use Response;
 
@@ -63,7 +62,8 @@ class MicrosubController extends Controller
     {
         // For channel tokens, force the request channel to the channel defined in the token
         $td = Request::get('token_data');
-        if (isset($td['type']) && 'channel' == $td['type']) {
+
+        if (isset($td['type']) && 'channel' === $td['type']) {
             return Channel::where('id', $td['channel_id'])->first();
         } else {
             if (! Request::input('channel')) {
@@ -74,7 +74,15 @@ class MicrosubController extends Controller
             }
 
             $uid = Request::input('channel');
-            $channel = Channel::where('user_id', Auth::user()->id)->where('uid', $uid)->first();
+
+            if ('unread' === $uid) {
+                return $uid;
+            }
+
+            $channel = Channel::where('user_id', Auth::user()->id)
+                ->where('uid', $uid)
+                ->first();
+
             if (! $channel) {
                 return Response::json([
                     'error' => 'not_found',
@@ -160,11 +168,24 @@ class MicrosubController extends Controller
         return $this->{'post_'.$action}();
     }
 
-    //////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     private function get_channels()
     {
         $channels = [];
+
+        $count = Entry::whereHas('channels', function ($query) use ($channels) {
+            $query->whereIn('channel_entry.channel_id', $channels)
+                    ->where('channel_entry.seen', 0);
+        })
+        ->distinct()
+        ->count();
+
+        $channels[] = [
+            'uid' => 'unread',
+            'name' => __('Unread'),
+            'unread' => $count,
+        ];
 
         foreach (Auth::user()->channels()->get() as $channel) {
             $channels[] = $channel->to_array();
@@ -374,8 +395,91 @@ class MicrosubController extends Controller
     {
         $channel = $this->_getRequestChannel();
 
+        if ('unread' === $channel) {
+            // All of the current user's channels.
+            $channels = Auth::user()->channels()->get()->pluck('id');
+
+            $limit = ((int) Request::input('limit')) ?: 20;
+
+            // Fetch unseen entries in any of these channels.
+            $entries = Entry::orderByDesc('published')
+                ->with('channels')
+                ->whereHas('channels', function ($query) use ($channels) {
+                    $query->whereIn('channel_entry.channel_id', $channels)
+                        ->where('channel_entry.seen', 0);
+                })
+                ->limit($limit + 1);
+
+            // Return items in a particular source.
+            if (Request::input('source')) {
+                $source_id = (int) Request::input('source');
+                $entries = $entries->where('source_id', $source_id);
+            }
+
+            if (Request::input('before')) {
+                $before = $this->_parseEntryCursor(Request::input('before'));
+
+                if (! $before) {
+                    return Response::json(['error' => 'invalid_cursor'], 400);
+                }
+
+                $entries = $channel->entries()->where(function ($query) use ($before) {
+                    // Todo: improve
+                    $query->where('published', '>', $before[0]);
+                });
+            }
+
+            if (Request::input('after')) {
+                $after = $this->_parseEntryCursor(Request::input('after'));
+
+                if (! $after) {
+                    return Response::json(['error' => 'invalid_cursor'], 400);
+                }
+
+                $entries = $entries->where(function ($query) use ($after) {
+                    // Todo: improve
+                    $query->where('published', '<=', $after[0]);
+                });
+            }
+
+            $entries = $entries->get();
+
+            $newbefore = false;
+            $newafter = false;
+            $items = [];
+
+            foreach ($entries as $i => $entry) {
+                if (0 === $i) { // Always include a cursor to be able to return newer entries
+                    $newbefore = $this->_buildEntryCursor($entry);
+                }
+
+                if ($i < $limit) {
+                    $items[] = $entry->to_array($entry->channels[0] ?? false);
+                }
+
+                if ($i === $limit) { // Don't add the last item, but return a cursor for the next page
+                    $newafter = $this->_buildEntryCursor($entry);
+                }
+            }
+
+            $response = [
+                'items' => $items,
+                'paging' => [],
+            ];
+
+            if ($newbefore && $newbefore != Request::input('after')) {
+                $response['paging']['before'] = $newbefore;
+            }
+
+            if ($newafter) {
+                $response['paging']['after'] = $newafter;
+            }
+
+            return Response::json($response);
+        }
+
         // Check that the channel exists
-        if (Channel::class != get_class($channel)) {
+        if (Channel::class !== get_class($channel)) {
             return $channel;
         }
 
@@ -405,7 +509,7 @@ class MicrosubController extends Controller
                     ->orWhere(function ($query) use ($before) {
                         // $query->where('channel_entry.created_at', '=', $before[0])
                         $query->where('published', '=', $before[0])
-                        ->where('channel_entry.batch_order', '<', $before[1]);
+                            ->where('channel_entry.batch_order', '<', $before[1]);
                     });
             });
         }
@@ -421,16 +525,14 @@ class MicrosubController extends Controller
                     ->orWhere(function ($query) use ($after) {
                         // $query->where('channel_entry.created_at', '=', $after[0])
                         $query->where('published', '=', $after[0])
-                        ->where('channel_entry.batch_order', '>=', $after[1]);
+                            ->where('channel_entry.batch_order', '>=', $after[1]);
                     });
             });
         }
 
-        if ('false' == Request::input('is_read')) {
+        if ('false' === Request::input('is_read')) {
             $entries = $entries->where('seen', 0);
         }
-
-        //Log::info('timeline request: before='.Request::input('before').' after='.Request::input('after'));
 
         $entries = $entries->get();
 
@@ -439,7 +541,7 @@ class MicrosubController extends Controller
         $items = [];
 
         foreach ($entries as $i => $entry) {
-            if (0 == $i) { // Always include a cursor to be able to return newer entries
+            if (0 === $i) { // Always include a cursor to be able to return newer entries
                 $newbefore = $this->_buildEntryCursor($entry);
             }
 
@@ -447,7 +549,7 @@ class MicrosubController extends Controller
                 $items[] = $entry->to_array($channel);
             }
 
-            if ($i == $limit) { // Don't add the last item, but return a cursor for the next page
+            if ($i === $limit) { // Don't add the last item, but return a cursor for the next page
                 $newafter = $this->_buildEntryCursor($entry);
             }
         }
@@ -470,8 +572,6 @@ class MicrosubController extends Controller
             $response['paging']['after'] = $newafter;
         }
 
-        //Log::info('new paging: '.json_encode($response['paging']));
-
         return Response::json($response);
     }
 
@@ -479,44 +579,8 @@ class MicrosubController extends Controller
     {
         $channel = $this->_getRequestChannel();
 
-        // Check that the channel exists
-        if (Channel::class != get_class($channel)) {
-            return $channel;
-        }
-
-        switch (Request::input('method')) {
-            case 'mark_read':
-                if (Request::input('last_read_entry')) {
-                    $channel_entry = DB::table('channel_entry')
-                        ->where('channel_id', $channel->id)
-                        ->where('entry_id', Request::input('last_read_entry'))
-                        ->first();
-
-                    if (! $channel_entry) {
-                        return Response::json(['error' => 'invalid_input', 'error_description' => 'The entry ID provided was not found'], 400);
-                    }
-
-                    $entry = Entry::where('id', $channel_entry->entry_id)->first();
-
-                    $result = $channel->mark_entries_read_before($entry, $channel_entry);
-
-                    return Response::json(['result' => 'ok', 'updated' => $result]);
-                } elseif (Request::input('entry')) {
-                    if (! is_array(Request::input('entry'))) {
-                        $entryIds = [Request::input('entry')];
-                    } else {
-                        $entryIds = Request::input('entry');
-                    }
-
-                    $result = $channel->mark_entries_read($entryIds);
-
-                    return Response::json(['result' => 'ok', 'updated' => $result]);
-                } else {
-                    return Response::json(['error' => 'invalid_input', 'error_description' => 'To mark one or more entries as read, include an entry id or last_read_entry parameter'], 400);
-                }
-
-                // no break
-            case 'mark_unread':
+        if ('unread' === $channel) {
+            if ('mark_read' === Request::input('method')) {
                 if (Request::input('entry')) {
                     if (! is_array(Request::input('entry'))) {
                         $entryIds = [Request::input('entry')];
@@ -524,32 +588,92 @@ class MicrosubController extends Controller
                         $entryIds = Request::input('entry');
                     }
 
-                    $result = $channel->mark_entries_unread($entryIds);
+                    $userChannels = Auth::user()->channels()
+                        ->whereHas('entries', function ($query) use ($entryIds) {
+                            $query->whereIn('channel_entry.entry_id', $entryIds);
+                        })
+                        ->get();
 
-                    return Response::json(['result' => 'ok', 'updated' => $result]);
-                } else {
-                    return Response::json(['error' => 'invalid_input', 'error_description' => 'To mark one or more entries as unread, include an entry id'], 400);
-                }
-
-                // no break
-            case 'remove':
-                if (Request::input('entry')) {
-                    if (! is_array(Request::input('entry'))) {
-                        $entryIds = [Request::input('entry')];
-                    } else {
-                        $entryIds = Request::input('entry');
+                    foreach ($userChannels as $userChannel) {
+                        $result = $userChannel->mark_entries_read($entryIds);
                     }
 
-                    $result = $channel->remove_entries($entryIds);
-
                     return Response::json(['result' => 'ok', 'updated' => $result]);
-                } else {
-                    return Response::json(['error' => 'invalid_input', 'error_description' => 'To mark one or more entries as unread, include an entry id'], 400);
                 }
+            }
+        } else {
+            // Check that the channel exists
+            if (Channel::class != get_class($channel)) {
+                return $channel;
+            }
 
-                // no break
-            default:
-                return Response::json(['error' => 'invalid_method', 'error_description' => 'The specified method was not found for this action'], 400);
+            switch (Request::input('method')) {
+                case 'mark_read':
+                    if (Request::input('last_read_entry')) {
+                        $channel_entry = DB::table('channel_entry')
+                            ->where('channel_id', $channel->id)
+                            ->where('entry_id', Request::input('last_read_entry'))
+                            ->first();
+
+                        if (! $channel_entry) {
+                            return Response::json(['error' => 'invalid_input', 'error_description' => 'The entry ID provided was not found'], 400);
+                        }
+
+                        $entry = Entry::where('id', $channel_entry->entry_id)->first();
+
+                        $result = $channel->mark_entries_read_before($entry, $channel_entry);
+
+                        return Response::json(['result' => 'ok', 'updated' => $result]);
+                    } elseif (Request::input('entry')) {
+                        if (! is_array(Request::input('entry'))) {
+                            $entryIds = [Request::input('entry')];
+                        } else {
+                            $entryIds = Request::input('entry');
+                        }
+
+                        $result = $channel->mark_entries_read($entryIds);
+
+                        return Response::json(['result' => 'ok', 'updated' => $result]);
+                    } else {
+                        return Response::json(['error' => 'invalid_input', 'error_description' => 'To mark one or more entries as read, include an entry id or last_read_entry parameter'], 400);
+                    }
+
+                    // no break
+                case 'mark_unread':
+                    if (Request::input('entry')) {
+                        if (! is_array(Request::input('entry'))) {
+                            $entryIds = [Request::input('entry')];
+                        } else {
+                            $entryIds = Request::input('entry');
+                        }
+
+                        $result = $channel->mark_entries_unread($entryIds);
+
+                        return Response::json(['result' => 'ok', 'updated' => $result]);
+                    } else {
+                        return Response::json(['error' => 'invalid_input', 'error_description' => 'To mark one or more entries as unread, include an entry id'], 400);
+                    }
+
+                    // no break
+                case 'remove':
+                    if (Request::input('entry')) {
+                        if (! is_array(Request::input('entry'))) {
+                            $entryIds = [Request::input('entry')];
+                        } else {
+                            $entryIds = Request::input('entry');
+                        }
+
+                        $result = $channel->remove_entries($entryIds);
+
+                        return Response::json(['result' => 'ok', 'updated' => $result]);
+                    } else {
+                        return Response::json(['error' => 'invalid_input', 'error_description' => 'To mark one or more entries as unread, include an entry id'], 400);
+                    }
+
+                    // no break
+                default:
+                    return Response::json(['error' => 'invalid_method', 'error_description' => 'The specified method was not found for this action'], 400);
+            }
         }
     }
 

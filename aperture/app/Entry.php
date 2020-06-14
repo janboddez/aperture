@@ -52,8 +52,12 @@ class Entry extends Model
                 $data = json_decode($ce->original_data, true);
             }
 
-            if ('disabled' != $channel->read_tracking_mode) {
+            if ('disabled' !== $channel->read_tracking_mode) {
                 $data['_is_read'] = (bool) $ce->seen;
+            }
+
+            if ($channel) {
+                $data['_channel'] = $channel->uid;
             }
         }
 

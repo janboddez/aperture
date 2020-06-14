@@ -36,8 +36,9 @@ class User extends Authenticatable
     public function channels()
     {
         $channels = $this->hasMany('App\Channel')
-          ->where('archived', 0)
-          ->orderBy('sort');
+            ->where('archived', 0)
+            ->orderBy('sort');
+
         if ($this->demo_mode_enabled) {
             $channels = $channels->where('hide_in_demo_mode', 0);
         }
@@ -48,8 +49,9 @@ class User extends Authenticatable
     public function archived_channels()
     {
         $channels = $this->hasMany('App\Channel')
-          ->where('archived', 1)
-          ->orderBy('sort');
+            ->where('archived', 1)
+            ->orderBy('sort');
+
         if ($this->demo_mode_enabled) {
             $channels = $channels->where('hide_in_demo_mode', 0);
         }
@@ -60,7 +62,7 @@ class User extends Authenticatable
     public function all_channels()
     {
         $channels = $this->hasMany('App\Channel')
-          ->orderBy('sort');
+            ->orderBy('sort');
 
         return $channels;
     }
@@ -69,9 +71,9 @@ class User extends Authenticatable
     {
         // Move the sort order of existing channels out of the way for the new channel
         DB::table('channels')
-          ->where('user_id', $this->id)
-          ->where('sort', '>', 0)
-          ->increment('sort');
+            ->where('user_id', $this->id)
+            ->where('sort', '>', 0)
+            ->increment('sort');
 
         $channel = new Channel();
         $channel->user_id = $this->id;
@@ -141,7 +143,9 @@ class User extends Authenticatable
         if (! $this->micropub_config) {
             return false;
         }
+
         $config = json_decode($this->micropub_config, true);
+
         if (isset($config[$key])) {
             return $config[$key];
         }
