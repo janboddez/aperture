@@ -20,7 +20,7 @@ class Controller extends BaseController
         //     .'  '.$entry['batch_order'];
         // else
         // return \p3k\b10to60(strtotime($entry['added_to_channel_at'])).':'.\p3k\b10to60($entry['batch_order']);
-        return \p3k\b10to60(strtotime($entry['published'])).':'.\p3k\b10to60($entry['batch_order']);
+        return \p3k\b10to60(strtotime($entry['published'])).':'.\p3k\b10to60($entry->id);
     }
 
     protected function _parseEntryCursor($cursor)
