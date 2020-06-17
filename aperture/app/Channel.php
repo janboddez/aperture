@@ -3,7 +3,6 @@
 namespace App;
 
 use App\Events\SourceRemoved;
-use DB;
 use Illuminate\Database\Eloquent\Model;
 
 class Channel extends Model
@@ -26,7 +25,8 @@ class Channel extends Model
 
     public function sources()
     {
-        return $this->belongsToMany('\App\Source')->withPivot(['name', 'site_url', 'fetch_original', 'xpath_selector']);
+        return $this->belongsToMany('\App\Source')
+            ->withPivot(['name', 'site_url', 'fetch_original', 'xpath_selector']);
     }
 
     public function entries()
@@ -36,13 +36,11 @@ class Channel extends Model
 
     public function excluded_types()
     {
-        $types = [];
-
         if ($this->exclude_types) {
-            $types = explode(' ', $this->exclude_types);
+            return explode(' ', $this->exclude_types);
         }
 
-        return $types;
+        return [];
     }
 
     public function to_array()
@@ -54,10 +52,15 @@ class Channel extends Model
 
         switch ($this->read_tracking_mode) {
             case 'count':
-                $array['unread'] = $this->entries()->where('seen', 0)->count();
+                $array['unread'] = $this->entries()
+                    ->wherePivot('seen', 0)
+                    ->count();
                 break;
+
             case 'boolean':
-                $array['unread'] = $this->entries()->where('seen', 0)->count() > 0;
+                $array['unread'] = $this->entries()
+                    ->wherePivot('seen', 0)
+                    ->count() > 0;
                 break;
         }
 
@@ -71,22 +74,20 @@ class Channel extends Model
     public function remove_source(Source $source, $remove_entries = false)
     {
         if ($remove_entries) {
-            DB::table('channel_entry')
-                ->join('entries', 'channel_entry.entry_id', '=', 'entries.id')
-                ->where('channel_entry.channel_id', $this->id)
+            $this->entries()
                 ->where('entries.source_id', $source->id)
-                ->delete();
+                ->detach();
         }
 
-        $this->sources()->detach($source->id);
+        $this->sources()
+            ->detach($source->id);
+
         event(new SourceRemoved($source, $this));
     }
 
     public function delete()
     {
-        $sources = $this->sources()->get();
-
-        foreach ($sources as $source) {
+        foreach ($this->sources as $source) {
             $this->remove_source($source);
         }
 
@@ -95,35 +96,29 @@ class Channel extends Model
 
     public function mark_entries_read(array $entry_ids)
     {
-        return DB::table('channel_entry')
-            ->where('channel_id', $this->id)
-            ->whereIn('entry_id', $entry_ids)
-            ->update(['seen' => 1]);
+        return $this->entries()
+            ->updateExistingPivot($entry_ids, ['seen' => 1]);
     }
 
     public function mark_entries_unread(array $entry_ids)
     {
-        return DB::table('channel_entry')
-            ->where('channel_id', $this->id)
-            ->whereIn('entry_id', $entry_ids)
-            ->update(['seen' => 0]);
+        return $this->entries()
+            ->updateExistingPivot($entry_ids, ['seen' => 0]);
     }
 
     public function remove_entries(array $entry_ids)
     {
-        return  DB::table('channel_entry')
-            ->where('channel_id', $this->id)
-            ->whereIn('entry_id', $entry_ids)
-            ->delete();
+        return $this->entries()
+            ->wherePivotIn('entry_id', $entry_ids)
+            ->detach();
     }
 
-    public function mark_entries_read_before(Entry $entry, $channel_entry)
+    public function mark_entries_read_before(Entry $entry)
     {
         // TODO: Need some other method for sorting entries since the entry published date is used
         // to sort when returning items in the timeline.
-        return DB::table('channel_entry')
-            ->where('channel_id', $this->id)
-            ->where('created_at', '<=', $channel_entry->created_at)
+        return $this->entries()
+            ->wherePivot('created_at', '<=', $entry->pivot->created_at)
             ->update(['seen' => 1]);
     }
 
@@ -136,7 +131,7 @@ class Channel extends Model
             switch ($this->include_only) {
                 case 'photos_videos':
                     // allow any post with a photo, not just photo posts. e.g. a checkin with a photo
-                    $shouldAdd = in_array($entry->post_type(), ['photo', 'video']) || $entry->has_photo();
+                    $shouldAdd = in_array($entry->post_type(), ['photo', 'video'], true) || $entry->has_photo();
                     break;
                 case 'articles':
                     $shouldAdd = 'article' == $entry->post_type();

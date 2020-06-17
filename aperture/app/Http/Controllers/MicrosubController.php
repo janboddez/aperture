@@ -7,10 +7,7 @@ use App\Entry;
 use App\Events\SourceAdded;
 use App\Source;
 use Auth;
-use DB;
-use Log;
 use p3k\XRay;
-use p3k\XRay\Formats\Format;
 use Request;
 use Response;
 
@@ -411,7 +408,6 @@ class MicrosubController extends Controller
             // Fetch unseen entries in any of these channels.
             $entries = Entry::orderByDesc('published')
                 ->orderByDesc('id')
-                ->with('channels')
                 ->whereHas('channels', function ($query) use ($channelIds) {
                     $query->whereIn('channel_entry.channel_id', $channelIds)
                         ->where('channel_entry.seen', 0);
@@ -429,13 +425,11 @@ class MicrosubController extends Controller
                     return Response::json(['error' => 'invalid_cursor'], 400);
                 }
 
-                $entries = $entries->where(function ($query) use ($before) {
-                    $query->where('published', '>', $before[0])
-                        ->orWhere(function ($query) use ($before) {
-                            $query->where('published', '=', $before[0])
-                                ->where('entry.id', '>', $before[1]);
-                        });
-                });
+                $entries = $entries->where('published', '>', $before[0])
+                    ->orWhere(function ($query) use ($before) {
+                        $query->where('published', '=', $before[0])
+                            ->where('entry.id', '>', $before[1]);
+                    });
             }
 
             if (Request::input('after')) {
@@ -443,13 +437,11 @@ class MicrosubController extends Controller
                     return Response::json(['error' => 'invalid_cursor'], 400);
                 }
 
-                $entries = $entries->where(function ($query) use ($after) {
-                    $query->where('published', '<', $after[0])
-                        ->orWhere(function ($query) use ($after) {
-                            $query->where('published', '=', $after[0])
-                                ->where('id', '<=', $after[1]);
-                        });
-                });
+                $entries = $entries->where('published', '<', $after[0])
+                    ->orWhere(function ($query) use ($after) {
+                        $query->where('published', '=', $after[0])
+                            ->where('id', '<=', $after[1]);
+                    });
             }
 
             $entries = $entries->get();
@@ -513,15 +505,12 @@ class MicrosubController extends Controller
                 return Response::json(['error' => 'invalid_cursor'], 400);
             }
 
-            $entries = $entries->where(function ($query) use ($before) {
-                // $query->where('channel_entry.created_at', '>', $before[0])
-                $query->where('published', '>', $before[0])
-                    ->orWhere(function ($query) use ($before) {
-                        // $query->where('channel_entry.created_at', '=', $before[0])
-                        $query->where('published', '=', $before[0])
-                            ->where('entries.id', '>', $before[1]);
-                    });
-            });
+            $entries = $entries->where('published', '>', $before[0])
+                ->orWhere(function ($query) use ($before) {
+                    // $query->where('channel_entry.created_at', '=', $before[0])
+                    $query->where('published', '=', $before[0])
+                        ->where('entries.id', '>', $before[1]);
+                });
         }
 
         if (Request::input('after')) {
@@ -529,15 +518,12 @@ class MicrosubController extends Controller
                 return Response::json(['error' => 'invalid_cursor'], 400);
             }
 
-            $entries = $entries->where(function ($query) use ($after) {
-                // $query->where('channel_entry.created_at', '<', $after[0])
-                $query->where('published', '<', $after[0])
-                    ->orWhere(function ($query) use ($after) {
-                        // $query->where('channel_entry.created_at', '=', $after[0])
-                        $query->where('published', '=', $after[0])
-                            ->where('entries.id', '<=', $after[1]);
-                    });
-            });
+            $entries = $entries->where('published', '<', $after[0])
+                ->orWhere(function ($query) use ($after) {
+                    // $query->where('channel_entry.created_at', '=', $after[0])
+                    $query->where('published', '=', $after[0])
+                        ->where('entries.id', '<=', $after[1]);
+                });
         }
 
         if ('false' === Request::input('is_read')) {
@@ -655,106 +641,33 @@ class MicrosubController extends Controller
 
             switch (Request::input('method')) {
                 case 'fetch_original':
-                    $originalData = null;
-                    $entry = null;
-
                     if (! Request::input('entry')) {
-                        abort(404);
+                        return response()->json([
+                            'error' => 'not_found',
+                            'error_description' => 'The entry ID provided was not found',
+                        ], 404);
                     }
 
                     $entry = $channel->entries()
                         ->where('channel_entry.entry_id', Request::input('entry'))
                         ->firstOrFail();
 
-                    $item = json_decode($entry->data, true);
-
-                    // The XPath selector, used to extract HTML, lives in the `channel_source` table.
-                    $source = $channel->sources()
-                        ->where('channel_source.source_id', $entry->source_id)
-                        ->firstOrFail();
-
-                    if (isset($item['url'])) {
-                        Log::info('Trying to fetch original content at '.$item['url']);
-
-                        if ('microformats' === $source->format && empty($source->pivot->xpath_selector)) {
-                            // Expecting microformats. Let XRay handle things.
-                            $xray = new XRay();
-                            $data = $xray->parse($item['url'], ['timeout' => 15]);
-
-                            if (! empty($data['data'])) {
-                                $originalData = json_encode($data['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-                            } elseif (! empty($data['error_description'])) {
-                                Log::error('Fetching failed: '.$data['error_description']);
-                            }
-                        } else {
-                            // Going to just fetch the HTML and sanitize it.
-                            // To do: add headers to `file_get_contents()`, etc.
-                            try {
-                                $html = file_get_contents($item['url']);
-                                $html = mb_convert_encoding($html, 'HTML-ENTITIES', mb_detect_encoding($html));
-
-                                libxml_use_internal_errors(true);
-
-                                $doc = new \DOMDocument();
-                                $doc->loadHTML($html, LIBXML_HTML_NODEFDTD);
-
-                                $xpath = new \DOMXPath($doc);
-
-                                $selector = $channel->pivot->xpath_selector ?? '//main';
-
-                                $result = $xpath->query($selector);
-                                $value = '';
-
-                                foreach ($result as $node) {
-                                    // As is, multiple matching nodes will be concatenated.
-                                    $value .= $doc->saveHTML($node).PHP_EOL;
-                                }
-
-                                $value = trim($value);
-
-                                if (! empty($value)) {
-                                    // Using reflections to call protected methods of the (abstract) Format class.
-                                    $sanitizeHTML = new \ReflectionMethod(Format::class, 'sanitizeHTML');
-                                    $sanitizeHTML->setAccessible(true);
-                                    $stripHTML = new \ReflectionMethod(Format::class, 'stripHTML');
-                                    $stripHTML->setAccessible(true);
-
-                                    // Sanitize and inject the newly fetched entry content.
-                                    $item['content']['html'] = $sanitizeHTML->invoke(null, $value);
-                                    $item['content']['text'] = $stripHTML->invoke(null, $value);
-
-                                    $originalData = json_encode($item, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-                                }
-                            } catch (\Exception $e) {
-                                // Something went wrong.
-                                Log::debug($e->getMessage());
-                            }
-                        }
-                    }
-
-                    // Update the database.
-                    $channel->entries()->updateExistingPivot($entry->id, [
-                        'original_data' => $originalData,
-                    ]);
+                    $entry->fetchOriginalContent($channel);
 
                     break;
 
                 case 'mark_read':
                     if (Request::input('last_read_entry')) {
-                        $channel_entry = DB::table('channel_entry')
-                            ->where('channel_id', $channel->id)
-                            ->where('entry_id', Request::input('last_read_entry'))
-                            ->first();
+                        $entry = $channel->entries()
+                            ->where('channel_entry.entry_id', Request::input('last_read_entry'))
+                            ->firstOrFail();
 
-                        if (! $channel_entry) {
-                            return Response::json(['error' => 'invalid_input', 'error_description' => 'The entry ID provided was not found'], 400);
-                        }
+                        $result = $channel->mark_entries_read_before($entry);
 
-                        $entry = Entry::where('id', $channel_entry->entry_id)->first();
-
-                        $result = $channel->mark_entries_read_before($entry, $channel_entry);
-
-                        return Response::json(['result' => 'ok', 'updated' => $result]);
+                        return Response::json([
+                            'result' => 'ok',
+                            'updated' => $result,
+                        ]);
                     } elseif (Request::input('entry')) {
                         if (! is_array(Request::input('entry'))) {
                             $entryIds = [Request::input('entry')];

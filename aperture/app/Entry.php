@@ -6,6 +6,9 @@ use App\Events\EntryCreating;
 use App\Events\EntryDeleting;
 use DB;
 use Illuminate\Database\Eloquent\Model;
+use Log;
+use p3k\XRay;
+use p3k\XRay\Formats\Format;
 
 class Entry extends Model
 {
@@ -175,5 +178,80 @@ class Entry extends Model
         }
 
         return 'note';
+    }
+
+    public function fetchOriginalContent(Channel $channel)
+    {
+        $originalData = null;
+        $item = json_decode($this->data, true);
+
+        // The XPath selector, used to extract HTML, lives in the `channel_source` table.
+        $source = $channel->sources()
+            ->where('channel_source.source_id', $this->source_id)
+            ->firstOrFail();
+
+        if (isset($item['url'])) {
+            Log::info('Trying to fetch original content at '.$item['url']);
+
+            if ('microformats' === $source->format && empty($source->pivot->xpath_selector)) {
+                // Expecting microformats. Let XRay handle things.
+                $xray = new XRay();
+                $data = $xray->parse($item['url'], ['timeout' => 15]);
+
+                if (! empty($data['data'])) {
+                    $originalData = json_encode($data['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                } elseif (! empty($data['error_description'])) {
+                    Log::error('Fetching failed: '.$data['error_description']);
+                }
+            } else {
+                // Going to just fetch the HTML and sanitize it.
+                // To do: add headers to `file_get_contents()`, etc.
+                try {
+                    $html = file_get_contents($item['url']);
+                    $html = mb_convert_encoding($html, 'HTML-ENTITIES', mb_detect_encoding($html));
+
+                    libxml_use_internal_errors(true);
+
+                    $doc = new \DOMDocument();
+                    $doc->loadHTML($html, LIBXML_HTML_NODEFDTD);
+
+                    $xpath = new \DOMXPath($doc);
+
+                    $selector = $channel->pivot->xpath_selector ?? '//main';
+
+                    $result = $xpath->query($selector);
+                    $value = '';
+
+                    foreach ($result as $node) {
+                        // As is, multiple matching nodes will be concatenated.
+                        $value .= $doc->saveHTML($node).PHP_EOL;
+                    }
+
+                    $value = trim($value);
+
+                    if (! empty($value)) {
+                        // Using reflections to call protected methods of the (abstract) Format class.
+                        $sanitizeHTML = new \ReflectionMethod(Format::class, 'sanitizeHTML');
+                        $sanitizeHTML->setAccessible(true);
+                        $stripHTML = new \ReflectionMethod(Format::class, 'stripHTML');
+                        $stripHTML->setAccessible(true);
+
+                        // Sanitize and inject the newly fetched entry content.
+                        $item['content']['html'] = $sanitizeHTML->invoke(null, $value);
+                        $item['content']['text'] = $stripHTML->invoke(null, $value);
+
+                        $originalData = json_encode($item, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                    }
+                } catch (\Exception $e) {
+                    // Something went wrong.
+                    Log::debug($e->getMessage());
+                }
+            }
+        }
+
+        // Update the database.
+        $channel->entries()->updateExistingPivot($this->id, [
+            'original_data' => $originalData,
+        ]);
     }
 }
