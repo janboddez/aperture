@@ -36,8 +36,10 @@ class MicrosubController extends Controller
     private function _verifyScopeForAction($action)
     {
         $expect = self::_actions()[$action];
+
         if ($expect) {
             $tokenData = Request::get('token_data');
+
             if (isset($tokenData['scope']) && is_array($tokenData['scope'])) {
                 return in_array($expect, $tokenData['scope']);
             } else {
@@ -653,6 +655,7 @@ class MicrosubController extends Controller
 
             switch (Request::input('method')) {
                 case 'fetch_original':
+                    $originalData = null;
                     $entry = null;
 
                     if (! Request::input('entry')) {
@@ -665,13 +668,10 @@ class MicrosubController extends Controller
 
                     $item = json_decode($entry->data, true);
 
+                    // The XPath selector, used to extract HTML, lives in the channel_source` table.
                     $source = $channel->sources()
                         ->where('channel_source.source_id', $entry->source_id)
                         ->firstOrFail();
-
-                    $item = json_decode($entry->data, true);
-
-                    $originalData = null;
 
                     if (isset($item['url'])) {
                         Log::info('Trying to fetch original content at '.$item['url']);
@@ -701,7 +701,6 @@ class MicrosubController extends Controller
                                 $xpath = new \DOMXPath($doc);
 
                                 $selector = $channel->pivot->xpath_selector ?? '//main';
-                                // Log::debug($selector);
 
                                 $result = $xpath->query($selector);
                                 $value = '';
@@ -720,6 +719,7 @@ class MicrosubController extends Controller
                                     $stripHTML = new \ReflectionMethod(Format::class, 'stripHTML');
                                     $stripHTML->setAccessible(true);
 
+                                    // Sanitize and inject the newly fetched entry content.
                                     $item['content']['html'] = $sanitizeHTML->invoke(null, $value);
                                     $item['content']['text'] = $stripHTML->invoke(null, $value);
 
@@ -732,6 +732,7 @@ class MicrosubController extends Controller
                         }
                     }
 
+                    // Update the database.
                     $channel->entries()->updateExistingPivot($entry->id, [
                         'original_data' => $originalData,
                     ]);
