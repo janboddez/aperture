@@ -668,7 +668,7 @@ class MicrosubController extends Controller
 
                     $item = json_decode($entry->data, true);
 
-                    // The XPath selector, used to extract HTML, lives in the channel_source` table.
+                    // The XPath selector, used to extract HTML, lives in the `channel_source` table.
                     $source = $channel->sources()
                         ->where('channel_source.source_id', $entry->source_id)
                         ->firstOrFail();
