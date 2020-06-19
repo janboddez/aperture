@@ -4,7 +4,6 @@ namespace App;
 
 use App\Events\EntryCreating;
 use App\Events\EntryDeleting;
-use DB;
 use Illuminate\Database\Eloquent\Model;
 use Log;
 use p3k\XRay;
@@ -28,7 +27,8 @@ class Entry extends Model
 
     public function channels()
     {
-        return $this->belongsToMany('\App\Channel');
+        return $this->belongsToMany('\App\Channel')
+            ->withPivot(['seen', 'original_data']);
     }
 
     public function media()
@@ -41,34 +41,37 @@ class Entry extends Model
         return env('APP_URL').'/entry/'.$this->source->id.'/'.$this->unique;
     }
 
-    public function to_array($channel = false)
+    public function to_array()
     {
         $data = json_decode($this->data, true);
 
-        if ($channel) {
-            $ce = DB::table('channel_entry')
-                ->where('channel_id', $channel->id)
-                ->where('entry_id', $this->id)
-                ->first();
-
-            if (! empty($ce->original_data)) {
-                $data = json_decode($ce->original_data, true);
-            }
-
-            if ('disabled' !== $channel->read_tracking_mode) {
-                $data['_is_read'] = (bool) $ce->seen;
-            }
-
-            if ($channel) {
-                $data['_channel'] = $channel->uid;
-            }
+        if (! empty($this->channels) && 1 === count($this->channels)) {
+            // Loaded through a specific channel, or belonging to just one
+            // channel.
+            $channel = $this->channels[0];
         }
 
-        unset($data['uid']); // don't include mf2 uid in the response
+        if (! empty($channel->pivot->original_data)) {
+            // If loaded through channel and "original data" exists.
+            $data = json_decode($channel->pivot->original_data, true);
+        }
 
-        // Include some Microsub info
+        if (isset($channel) && 'disabled' !== $channel->read_tracking_mode) {
+            $data['_is_read'] = (bool) $channel->pivot->seen;
+        } else {
+            // Most likely loaded through "Unread" channel (and part of multiple
+            // channels). Consider unread.
+            $data['_is_read'] = false;
+        }
+
+        unset($data['uid']);
+
+        // Include some Microsub info.
         $data['_id'] = (string) $this->id;
         $data['_source'] = (string) $this->source_id;
+        $data['_channel'] = $channel->uid ?? $this->channels[0]->uid;
+
+        \Log::info($data);
 
         return $data;
     }
@@ -95,7 +98,7 @@ class Entry extends Model
 
         if (! $matches && isset($data['category'])) {
             foreach ($data['category'] as $c) {
-                if (strtolower($c) == strtolower($keyword)) {
+                if (strtolower($c) === strtolower($keyword)) {
                     $matches = true;
                 }
             }
@@ -118,22 +121,22 @@ class Entry extends Model
         // Implements Post Type Discovery
         // https://www.w3.org/TR/post-type-discovery/#algorithm
 
-        if ('event' == $data['type']) {
+        if ('event' === $data['type']) {
             return 'event';
         }
 
         // Experimental
-        if ('card' == $data['type']) {
+        if ('card' === $data['type']) {
             return 'card';
         }
 
         // Experimental
-        if ('review' == $data['type']) {
+        if ('review' === $data['type']) {
             return 'review';
         }
 
         // Experimental
-        if ('recipe' == $data['type']) {
+        if ('recipe' === $data['type']) {
             return 'recipe';
         }
 
