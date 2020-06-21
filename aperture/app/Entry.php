@@ -69,9 +69,7 @@ class Entry extends Model
         // Include some Microsub info.
         $data['_id'] = (string) $this->id;
         $data['_source'] = (string) $this->source_id;
-        $data['_channel'] = $channel->uid ?? $this->channels[0]->uid;
-
-        \Log::info($data);
+        $data['_channel'] = $channel->uid ?? $this->channels[0]->uid ?? null;
 
         return $data;
     }
@@ -220,7 +218,7 @@ class Entry extends Model
 
                     $xpath = new \DOMXPath($doc);
 
-                    $selector = $channel->pivot->xpath_selector ?? '//main';
+                    $selector = $source->pivot->xpath_selector ?? '//main';
 
                     $result = $xpath->query($selector);
                     $value = '';

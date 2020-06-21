@@ -398,8 +398,11 @@ class MicrosubController extends Controller
 
     private function get_timeline()
     {
-        $entries = Entry::orderByDesc('published')
-            ->orderByDesc('id');
+        $limit = ((int) Request::input('limit')) ?: 20;
+
+        $entries = Entry::orderBy('published', 'desc')
+            ->orderBy('id', 'desc')
+            ->limit($limit + 1);
 
         if ('unread' === Request::input('channel')) {
             $entries = $entries->whereHas('channels', function ($query) {
@@ -410,7 +413,7 @@ class MicrosubController extends Controller
                     ->where('channel_entry.seen', 0);
             })
             ->with(['channels' => function ($query) {
-                // Eager load only the current user's channels.
+                // Eager load only the current user's related channels.
                 $query->where('channels.user_id', Auth::id())
                     ->where('channels.read_tracking_mode', '!=', 'disabled');
             }]);
@@ -432,9 +435,6 @@ class MicrosubController extends Controller
             }]);
         }
 
-        $limit = ((int) Request::input('limit')) ?: 20;
-        $entries = $entries->limit($limit + 1);
-
         // Return items in a particular source.
         if (Request::input('source')) {
             $entries = $entries->where('source_id', Request::input('source'));
@@ -445,11 +445,13 @@ class MicrosubController extends Controller
                 return Response::json(['error' => 'invalid_cursor'], 400);
             }
 
-            $entries = $entries->where('published', '>', $before[0])
-                ->orWhere(function ($query) use ($before) {
-                    $query->where('published', '=', $before[0])
-                        ->where('entries.id', '>', $before[1]);
-                });
+            $entries = $entries->where(function ($query) use ($before) {
+                $query->where('entries.published', '>', $before[0])
+                    ->orWhere(function ($query) use ($before) {
+                        $query->where('entries.published', '=', $before[0])
+                            ->where('entries.id', '>', $before[1]);
+                    });
+            });
         }
 
         if (Request::input('after')) {
@@ -457,11 +459,13 @@ class MicrosubController extends Controller
                 return Response::json(['error' => 'invalid_cursor'], 400);
             }
 
-            $entries = $entries->where('published', '<', $after[0])
-                ->orWhere(function ($query) use ($after) {
-                    $query->where('published', '=', $after[0])
-                        ->where('entries.id', '<=', $after[1]);
-                });
+            $entries = $entries->where(function ($query) use ($after) {
+                $query->where('entries.published', '<', $after[0])
+                    ->orWhere(function ($query) use ($after) {
+                        $query->where('entries.published', '=', $after[0])
+                            ->where('entries.id', '<=', $after[1]);
+                    });
+            });
         }
 
         $entries = $entries->get();
@@ -473,22 +477,25 @@ class MicrosubController extends Controller
             ], 404);
         }
 
-        $newbefore = false;
-        $newafter = false;
+        $newbefore = '';
+        $newafter = '';
         $items = [];
 
         foreach ($entries as $i => $entry) {
-            if (0 === $i) { // Always include a cursor to be able to return newer entries
+            if (0 === $i) {
+                // Always include a cursor to be able to return newer entries.
                 $newbefore = $this->_buildEntryCursor($entry);
             }
 
             if ($i < $limit) {
-                // No need to pass on a channel. It'll eager loaded into
+                // No need to pass on a channel. It's eager loaded into
                 // `$entry->channels[0]`.
                 $items[] = $entry->to_array();
             }
 
-            if ($i === $limit) { // Don't add the last item, but return a cursor for the next page
+            if ($i === $limit) {
+                // Don't add the last item, but return a cursor for the next
+                // page.
                 $newafter = $this->_buildEntryCursor($entry);
             }
         }
@@ -503,7 +510,7 @@ class MicrosubController extends Controller
             $response['source'] = $source->to_array();
         }
 
-        if ($newbefore && $newbefore != Request::input('after')) {
+        if ($newbefore) {
             $response['paging']['before'] = $newbefore;
         }
 

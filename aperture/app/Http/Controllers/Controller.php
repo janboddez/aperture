@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Entry;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -13,17 +14,17 @@ class Controller extends BaseController
     use DispatchesJobs;
     use ValidatesRequests;
 
-    protected function _buildEntryCursor($entry)
+    protected function _buildEntryCursor(Entry $entry)
     {
         // if(env('APP_ENV') == 'testing')
         //   return $entry['added_to_channel_at']
         //     .'  '.$entry['batch_order'];
         // else
         // return \p3k\b10to60(strtotime($entry['added_to_channel_at'])).':'.\p3k\b10to60($entry['batch_order']);
-        return \p3k\b10to60(strtotime($entry['published'])).':'.\p3k\b10to60($entry->id);
+        return \p3k\b10to60(strtotime($entry->published)).':'.\p3k\b10to60($entry->id);
     }
 
-    protected function _parseEntryCursor($cursor)
+    protected function _parseEntryCursor(string $cursor)
     {
         // if(env('APP_ENV') == 'testing')
         //   if(preg_match('/([0-9\-]{10} [0-9:]{8})  ([0-9]+)/', $cursor, $match)) {
