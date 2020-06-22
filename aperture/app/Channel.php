@@ -75,9 +75,13 @@ class Channel extends Model
     public function remove_source(Source $source, $remove_entries = false)
     {
         if ($remove_entries) {
-            $this->entries()
+            $entryIds = $this->entries()
                 ->where('entries.source_id', $source->id)
-                ->detach();
+                ->pluck('entries.id')
+                ->all();
+
+            $this->entries()
+                ->detach($entryIds);
         }
 
         $this->sources()
@@ -95,31 +99,32 @@ class Channel extends Model
         parent::delete();
     }
 
-    public function mark_entries_read(array $entry_ids)
+    public function remove_entries(array $entryIds)
     {
         return $this->entries()
-            ->updateExistingPivot($entry_ids, ['seen' => 1]);
+            ->detach($entryIds);
     }
 
-    public function mark_entries_unread(array $entry_ids)
+    public function mark_entries_read(array $entryIds)
     {
         return $this->entries()
-            ->updateExistingPivot($entry_ids, ['seen' => 0]);
+            ->updateExistingPivot($entryIds, ['seen' => 1]);
     }
 
-    public function remove_entries(array $entry_ids)
+    public function mark_entries_unread(array $entryIds)
     {
         return $this->entries()
-            ->wherePivotIn('entry_id', $entry_ids)
-            ->detach();
+            ->updateExistingPivot($entryIds, ['seen' => 0]);
     }
 
     public function mark_entries_read_before(Entry $entry)
     {
-        // TODO: Need some other method for sorting entries since the entry published date is used
-        // to sort when returning items in the timeline.
         return $this->entries()
-            ->wherePivot('created_at', '<=', $entry->pivot->created_at)
+            ->where('entries.published', '<', $entry->published)
+            ->orWhere(function ($query) use ($after) {
+                $query->where('entries.published', '=', $entry->published)
+                    ->where('entries.id', '<=', $entry->id);
+            })
             ->update(['seen' => 1]);
     }
 

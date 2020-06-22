@@ -29,7 +29,7 @@ class SourceRemovedListener implements ShouldQueue
         Log::info('Source now belongs to '.$channels->count().' channels');
 
         // If the source no longer belongs to any channels, unsubscribe from updates
-        if (0 == $channels->count()) {
+        if (0 === $channels->count()) {
             $event->source->unsubscribe();
         }
     }

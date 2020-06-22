@@ -175,22 +175,18 @@ class MicrosubController extends Controller
 
     private function get_channels()
     {
-        $channelIds = Auth::user()->channels()->pluck('id');
-
-        $count = Entry::whereHas('channels', function ($query) use ($channelIds) {
-            $query->whereIn('channel_entry.channel_id', $channelIds)
+        $count = Entry::whereHas('channels', function ($query) {
+            $query->where('channels.user_id', Auth::id())
                     ->where('channel_entry.seen', 0);
         })
         ->distinct()
         ->count();
 
-        $channels = [];
-
-        $channels[] = [
+        $channels = [[
             'uid' => 'unread',
             'name' => __('Unread'),
             'unread' => $count,
-        ];
+        ]];
 
         foreach (Auth::user()->channels()->get() as $channel) {
             $channels[] = $channel->to_array();
@@ -550,7 +546,7 @@ class MicrosubController extends Controller
             case 'mark_read':
                 if (Request::input('last_read_entry')) {
                     $entry = $channel->entries()
-                        ->where('channel_entry.entry_id', Request::input('last_read_entry'))
+                        ->where('entries.id', Request::input('last_read_entry'))
                         ->firstOrFail();
 
                     $result = $channel->mark_entries_read_before($entry);
