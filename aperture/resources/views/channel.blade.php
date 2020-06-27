@@ -58,6 +58,7 @@
                 <data class="source-url" value="{{ $source->url }}"></data>
                 <data class="source-format" value="{{ $source->format }}"></data>
                 <data class="source-entries-count" value="{{ $source->entries_count }}"></data>
+                <data class="source-channels" value='{{ json_encode($source->channels()->pluck('channels.uid')) }}'></data>
             </div>
         @endforeach
     </div>
@@ -164,8 +165,8 @@
 
                 <div class="field">
                 <div class="control">
-                    <label class="label">
-                    <input class="checkbox" type="checkbox" name="fetch_original" id="fetch-original" value="">
+                    <label class="checkbox">
+                    <input type="checkbox" name="fetch_original" id="fetch-original" value="">
                     Fetch original content?
                     </label>
                 </div>
@@ -175,6 +176,20 @@
                 <div class="control">
                     <label class="label" for="xpath-selector">XPath Selector</label>
                     <input class="input" type="text" name="xpath_selector" id="xpath-selector" value="">
+                </div>
+                </div>
+
+                <div class="field">
+                <div class="control">
+                    <label class="label">Channels</label>
+                    @foreach ($channels as $c)
+                        <div>
+                            <label class="checkbox">
+                                <input type="checkbox" data-channel-uid="{{ $c->uid }}">
+                                {{ $c->name }}
+                            </label>
+                        </div>
+                    @endforeach
                 </div>
                 </div>
 
@@ -385,6 +400,14 @@ $(function() {
         $('#site-url').val($(this).parents('.source').find('.site-url').attr('value'));
         $('#fetch-original').prop('checked', eval($(this).parents('.source').find('.fetch-original').attr('value')));
         $('#xpath-selector').val($(this).parents('.source').find('.xpath-selector').attr('value'));
+
+        var channels = JSON.parse($(this).parents('.source').find('.source-channels').attr('value'));
+
+        $.each(channels, function(index, value) {
+            // Check the relevant channels.
+            $('#source-settings-modal [data-channel-uid="'+value+'"]').prop('checked', true);
+        });
+
         $('#source-url-readonly').val($(this).parents('.source').find('.source-url').attr('value'));
         $('#source-settings-modal .save').data('source', $(this).data('source'));
         $('#source-settings-modal').addClass('is-active');
@@ -393,12 +416,22 @@ $(function() {
 
     $('#source-settings-modal .save').click(function() {
         $(this).addClass('is-loading');
+
+        var channels = [];
+
+        $('#source-settings-modal [data-channel-uid]').each(function() {
+            if ($(this).is(':checked')) {
+                channels.push($(this).data('channel-uid'));
+            }
+        });
+
         $.post('/channel/{{ $channel->id }}/source/'+$(this).data('source')+'/save', {
             _token: csrf_token(),
             name: $('#source-name').val(),
             site_url: $('#site-url').val(),
             fetch_original: $('#fetch-original').is(':checked'),
-            xpath_selector: $('#xpath-selector').val()
+            xpath_selector: $('#xpath-selector').val(),
+            channels: channels
         }, function(response) {
             reload_window(); // cheap way out
         });
@@ -434,6 +467,7 @@ $(function() {
         }
 
         $(this).addClass('is-loading');
+
         $.post('{{ route('save_channel', $channel) }}', {
             _token: csrf_token(),
             name: $('#channel-name').val(),

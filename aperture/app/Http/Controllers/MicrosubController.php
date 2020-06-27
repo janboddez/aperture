@@ -65,7 +65,7 @@ class MicrosubController extends Controller
         // For channel tokens, force the request channel to the channel defined in the token
         $td = Request::get('token_data');
 
-        if (isset($td['type']) && 'channel' === $td['type']) {
+        if (isset($td['type']) && $td['type'] === 'channel') {
             return Channel::where('id', $td['channel_id'])
                 ->first();
         } else {
@@ -78,7 +78,7 @@ class MicrosubController extends Controller
 
             $uid = Request::input('channel');
 
-            if ('unread' === $uid) {
+            if ($uid === 'unread') {
                 return $uid;
             }
 
@@ -113,7 +113,7 @@ class MicrosubController extends Controller
         }
 
         $verify = $this->_verifyAction($scopeKey);
-        if (true !== $verify) {
+        if ($verify !== true) {
             return $verify;
         }
 
@@ -150,7 +150,7 @@ class MicrosubController extends Controller
         }
 
         $verify = $this->_verifyAction($scopeKey);
-        if (true !== $verify) {
+        if ($verify !== true) {
             return $verify;
         }
 
@@ -175,9 +175,10 @@ class MicrosubController extends Controller
 
     private function get_channels()
     {
+        // "Create" the "Unread" channel.
         $count = Entry::whereHas('channels', function ($query) {
             $query->where('channels.user_id', Auth::id())
-                    ->where('channel_entry.seen', 0);
+                ->where('channel_entry.seen', 0);
         })
         ->distinct()
         ->count();
@@ -199,7 +200,7 @@ class MicrosubController extends Controller
 
     private function post_channels()
     {
-        if ('delete' == Request::input('method')) {
+        if (Request::input('method') === 'delete') {
             // Delete
 
             if (! Request::input('channel')) {
@@ -220,15 +221,21 @@ class MicrosubController extends Controller
             $channel->delete();
 
             return Response::json(['deleted' => true]);
-        } elseif ('order' == Request::input('method')) {
+        } elseif (Request::input('method') === 'order') {
             // Set Channel Order
 
             if (! Request::input('channels')) {
-                return Response::json(['error' => 'invalid_input', 'error_description' => 'Missing channels parameter'], 400);
+                return Response::json([
+                    'error' => 'invalid_input',
+                    'error_description' => 'Missing channels parameter',
+                ], 400);
             }
 
             if (! is_array(Request::input('channels'))) {
-                return Response::json(['error' => 'invalid_input', 'error_description' => 'channels parameter must be an array'], 400);
+                return Response::json([
+                    'error' => 'invalid_input',
+                    'error_description' => 'channels parameter must be an array',
+                ], 400);
             }
 
             $inputChannels = Request::input('channels');
@@ -236,7 +243,10 @@ class MicrosubController extends Controller
             $sorted = Auth::user()->set_channel_order($inputChannels);
 
             if (! $sorted) {
-                return Response::json(['error' => 'invalid_input', 'error_description' => 'One or more channels were not found'], 400);
+                return Response::json([
+                    'error' => 'invalid_input',
+                    'error_description' => 'One or more channels were not found',
+                ], 400);
             }
 
             return Response::json(['channels' => $sorted]);
@@ -244,17 +254,28 @@ class MicrosubController extends Controller
             // Update
 
             if (! Request::input('channel')) {
-                return Response::json(['error' => 'invalid_input', 'error_description' => 'Missing channel parameter'], 400);
+                return Response::json([
+                    'error' => 'invalid_input',
+                    'error_description' => 'Missing channel parameter',
+                ], 400);
             }
 
-            if (in_array(Request::input('channel'), ['notifications', 'global'])) {
-                return Response::json(['error' => 'invalid_input', 'error_description' => 'Cannot rename system channels'], 400);
+            if (in_array(Request::input('channel'), ['notifications', 'global'], true)) {
+                return Response::json([
+                    'error' => 'invalid_input',
+                    'error_description' => 'Cannot rename system channels',
+                ], 400);
             }
 
-            $channel = Auth::user()->channels()->where('uid', Request::input('channel'))->first();
+            $channel = Auth::user()->channels()
+                ->where('uid', Request::input('channel'))
+                ->first();
 
             if (! $channel) {
-                return Response::json(['error' => 'invalid_input', 'error_description' => 'Channel not found'], 400);
+                return Response::json([
+                    'error' => 'invalid_input',
+                    'error_description' => 'Channel not found',
+                ], 400);
             }
 
             if (Request::input('name')) {
@@ -267,7 +288,10 @@ class MicrosubController extends Controller
             // Create
 
             if (! trim(Request::input('name'))) {
-                return Response::json(['error' => 'invalid_input', 'error_description' => 'Missing name parameter'], 400);
+                return Response::json([
+                    'error' => 'invalid_input',
+                    'error_description' => 'Missing name parameter',
+                ], 400);
             }
 
             $channels = [];
@@ -287,7 +311,7 @@ class MicrosubController extends Controller
 
     private function post_search()
     {
-        if (null == Request::input('channel')) {
+        if (Request::input('channel') === null) {
             // Search for feeds matching the query
 
             if (! Request::input('query')) {
@@ -315,7 +339,7 @@ class MicrosubController extends Controller
                 // Possible URL that may require adding a scheme
                 $possible_url = \p3k\url\normalize($possible_url);
                 // Check if the hostname has at least one dot
-                if (false !== strpos(parse_url($possible_url, PHP_URL_HOST), '.')) {
+                if (strpos(parse_url($possible_url, PHP_URL_HOST), '.') !== false) {
                     $url = $possible_url;
                 }
             }
@@ -330,7 +354,7 @@ class MicrosubController extends Controller
 
             $feeds = [];
 
-            if (! isset($response['error']) && 200 == $response['code']) {
+            if (! isset($response['error']) && $response['code'] == 200) {
                 $feeds = $response['feeds'];
             }
 
@@ -346,24 +370,22 @@ class MicrosubController extends Controller
         } else {
             // TODO: Search within channels for posts matching the query
 
-            return Response::json([
-                'error' => 'not_implemented',
-            ], 400);
+            return Response::json(['error' => 'not_implemented'], 400);
         }
     }
 
     private function get_preview()
     {
-        // If the feed is already in the database, return those results
         $source = Source::where('url', Request::input('url'))->first();
 
         $items = [];
 
         if ($source) {
+            // If the feed is already in the database, return those results
             $entries = $source->entries()
                 ->select('entries.*')
-                ->orderByDesc('created_at')
-                ->orderByDesc('published')
+                ->orderBy('published', 'desc')
+                ->orderBy('id', 'desc')
                 ->limit(20)
                 ->get();
 
@@ -380,16 +402,12 @@ class MicrosubController extends Controller
             $xray->http = $http;
             $parsed = $xray->parse(Request::input('url'), ['expect' => 'feed']);
 
-            if ($parsed && isset($parsed['data']['type']) && 'feed' == $parsed['data']['type']) {
+            if ($parsed && isset($parsed['data']['type']) && $parsed['data']['type'] == 'feed') {
                 $items = $parsed['data']['items'];
             }
         }
 
-        $response = [
-            'items' => $items,
-        ];
-
-        return Response::json($response);
+        return Response::json(['items' => $items]);
     }
 
     private function get_timeline()
@@ -400,7 +418,7 @@ class MicrosubController extends Controller
             ->orderBy('id', 'desc')
             ->limit($limit + 1);
 
-        if ('unread' === Request::input('channel')) {
+        if (Request::input('channel') === 'unread') {
             $entries = $entries->whereHas('channels', function ($query) {
                 // Fetch only unseen entries in any of the current user's
                 // channels that support read tracking.
@@ -408,6 +426,14 @@ class MicrosubController extends Controller
                     ->where('channels.read_tracking_mode', '!=', 'disabled')
                     ->where('channel_entry.seen', 0);
             })
+            /*
+            // Fetch only unseen entries in any of the current user's
+            // channels that support read tracking.
+            $entries = $entries->whereHas('channels', function ($query) {
+                $query->where('channels.read_tracking_mode', '!=', 'disabled')
+                    ->where('channel_entry.seen', 0);
+            })
+            */
             ->with(['channels' => function ($query) {
                 // Eager load only the current user's related channels.
                 $query->where('channels.user_id', Auth::id())
@@ -420,7 +446,7 @@ class MicrosubController extends Controller
                 $query->where('channels.user_id', Auth::id())
                     ->where('channels.uid', Request::input('channel'));
 
-                if ('false' === Request::input('is_read')) {
+                if (Request::input('is_read') === 'false') {
                     // Unread items only.
                     $query->where('channel_entry.seen', 0);
                 }
@@ -478,7 +504,7 @@ class MicrosubController extends Controller
         $items = [];
 
         foreach ($entries as $i => $entry) {
-            if (0 === $i) {
+            if ($i === 0) {
                 // Always include a cursor to be able to return newer entries.
                 $newbefore = $this->_buildEntryCursor($entry);
             }
@@ -522,7 +548,7 @@ class MicrosubController extends Controller
         $channel = $this->_getRequestChannel();
 
         // Check that the channel exists.
-        if ('unread' !== $channel && Channel::class !== get_class($channel)) {
+        if ($channel !== 'unread' && get_class($channel) !== Channel::class) {
             return $channel;
         }
 
@@ -562,7 +588,7 @@ class MicrosubController extends Controller
                         $entryIds = Request::input('entry');
                     }
 
-                    if ('unread' === $channel) {
+                    if ($channel === 'unread') {
                         $result = 0;
 
                         // All channels that include at least one of these
@@ -606,7 +632,7 @@ class MicrosubController extends Controller
                     $entryIds = Request::input('entry');
                 }
 
-                if ('unread' === $channel) {
+                if ($channel === 'unread') {
                     $result = 0;
 
                     // All channels that include at least one of these
@@ -636,7 +662,7 @@ class MicrosubController extends Controller
                     ], 400);
                 }
 
-                if ('unread' === $channel) {
+                if ($channel === 'unread') {
                     return Response::json([
                         'result' => 'ok',
                         'updated' => 0,
@@ -668,7 +694,7 @@ class MicrosubController extends Controller
     {
         $channel = $this->_getRequestChannel();
 
-        if (Channel::class !== get_class($channel)) {
+        if (get_class($channel) !== Channel::class) {
             return $channel;
         }
 
@@ -700,7 +726,7 @@ class MicrosubController extends Controller
     {
         $channel = $this->_getRequestChannel();
 
-        if (Channel::class !== get_class($channel)) {
+        if (get_class($channel) !== Channel::class) {
             return $channel;
         }
 
@@ -716,7 +742,7 @@ class MicrosubController extends Controller
             $source->save();
         }
 
-        if (0 === $channel->sources()->where('source_id', $source->id)->count()) {
+        if ($channel->sources()->where('source_id', $source->id)->count() === 0) {
             $channel->sources()->attach($source->id, ['created_at' => date('Y-m-d H:i:s')]);
         }
 
@@ -732,7 +758,7 @@ class MicrosubController extends Controller
     {
         $channel = $this->_getRequestChannel();
 
-        if (Channel::class !== get_class($channel)) {
+        if (get_class($channel) !== Channel::class) {
             return $channel;
         }
 

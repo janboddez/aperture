@@ -45,10 +45,14 @@ class HomeController extends Controller
             ->withCount('entries')
             ->get();
 
+        $channels = Auth::user()->channels()
+            ->get();
+
         return view('channel', [
             'channel' => $channel,
-            // Sort by name (case-insensitive)
+            // Sort by name (case-insensitive). (To do: improve attribute naming!)
             'sources' => $sources->sortBy('domain', SORT_NATURAL | SORT_FLAG_CASE),
+            'channels' => $channels,
         ]);
     }
 
@@ -71,7 +75,7 @@ class HomeController extends Controller
             $source->save();
         }
 
-        if (0 === $channel->sources()->where('source_id', $source->id)->count()) {
+        if ($channel->sources()->where('source_id', $source->id)->count() === 0) {
             $channel->sources()->attach($source->id, [
                 'created_at' => date('Y-m-d H:i:s'),
                 'site_url' => Request::input('site_url'),
@@ -110,7 +114,7 @@ class HomeController extends Controller
         $channel->default_destination = Request::input('default_destination') ?: '';
 
         // Users with an unlimited retention policy can override per channel
-        if (0 === Auth::user()->retention_days) {
+        if (Auth::user()->retention_days === 0) {
             $channel->retention_days = Request::input('retention_days') ?: 0;
         }
 
@@ -127,6 +131,7 @@ class HomeController extends Controller
             abort(401);
         }
 
+        /*
         $subscription = DB::table('channel_source')
             ->where('channel_id', $channel->id)
             ->where('source_id', $source->id)
@@ -136,10 +141,35 @@ class HomeController extends Controller
                 'fetch_original' => ('true' === Request::input('fetch_original') ? 1 : 0),
                 'xpath_selector' => Request::input('xpath_selector'),
             ]);
+        */
 
-        return response()->json([
-            'result' => 'ok',
-        ]);
+        $channels = Request::input('channels');
+
+        if (empty($channels) || ! is_array($channels)) {
+            return response()->json(['result' => 'error'], 400);
+        }
+
+        // Fetch the logged in user's channel IDs that match these UIDs.
+        $channelIds = Channel::where('channels.user_id', Auth::id())
+            ->whereIn('channels.uid', $channels)
+            ->pluck('channels.id');
+
+        $channels = [];
+
+        foreach ($channelIds as $channelId) {
+            $channels[$channelId] = [
+                'name' => Request::input('name'),
+                'site_url' => Request::input('site_url'),
+                'fetch_original' => (Request::input('fetch_original') === 'true' ? 1 : 0),
+                'xpath_selector' => Request::input('xpath_selector'),
+            ];
+        }
+
+        // Add this source, and above pivot column values, to the matching
+        // channels.
+        $source->channels()->sync($channels);
+
+        return response()->json(['result' => 'ok']);
     }
 
     public function remove_source(Channel $channel)
@@ -230,7 +260,7 @@ class HomeController extends Controller
 
         $feeds = [];
 
-        if (! isset($response['error']) && 200 == $response['code']) {
+        if (! isset($response['error']) && $response['code'] == 200) {
             $feeds = $response['feeds'];
         }
 
