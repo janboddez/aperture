@@ -140,13 +140,13 @@ class Channel extends Model
                     $shouldAdd = in_array($entry->post_type(), ['photo', 'video'], true) || $entry->has_photo();
                     break;
                 case 'articles':
-                    $shouldAdd = 'article' == $entry->post_type();
+                    $shouldAdd = $entry->post_type() === 'article';
                     break;
                 case 'checkins':
-                    $shouldAdd = 'checkin' == $entry->post_type();
+                    $shouldAdd = $entry->post_type() === 'checkin';
                     break;
                 case 'reposts':
-                    $shouldAdd = 'repost' == $entry->post_type();
+                    $shouldAdd = $entry->post_type() === 'repost';
                     break;
             }
         }

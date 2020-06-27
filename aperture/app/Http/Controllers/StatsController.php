@@ -23,7 +23,7 @@ class StatsController extends Controller
 
     public function users()
     {
-        if ('config' === Request::input('mode')) {
+        if (Request::input('mode') === 'config') {
             $response = 'graph_title Aperture Users
 graph_info Total number of Aperture user accounts
 graph_vlabel Users
@@ -45,7 +45,7 @@ users.min 0
 
     public function new_entries()
     {
-        if ('config' === Request::input('mode')) {
+        if (Request::input('mode') === 'config') {
             $response = 'graph_title Aperture New Entries
 graph_info The rate of new entries being added
 graph_vlabel Entries per minute
@@ -68,7 +68,7 @@ new_entries.min 0
 
     public function entries()
     {
-        if ('config' === Request::input('mode')) {
+        if (Request::input('mode') === 'config') {
             $response = 'graph_title Aperture Entries
 graph_info The total entries currently stored
 graph_vlabel Entries
@@ -90,7 +90,7 @@ entries.min 0
 
     public function entries_size()
     {
-        if ('config' === Request::input('mode')) {
+        if (Request::input('mode') === 'config') {
             $response = 'graph_title Aperture Entries
 graph_info The size on disk of entries
 graph_vlabel Entries
@@ -112,7 +112,7 @@ size.min 0
 
     public function sources()
     {
-        if ('config' === Request::input('mode')) {
+        if (Request::input('mode') === 'config') {
             $response = 'graph_title Aperture Sources
 graph_info Total number of active sources in Aperture
 graph_vlabel Sources
@@ -134,7 +134,7 @@ sources.min 0
 
     public function media_size()
     {
-        if ('config' === Request::input('mode')) {
+        if (Request::input('mode') === 'config') {
             $response = 'graph_title Aperture Media
 graph_info Total size of media stored in Aperture
 graph_vlabel Bytes
@@ -169,7 +169,7 @@ disk.min 0
     public function proxy_bytes()
     {
         if (env('IMG_PROXY_URL')) {
-            if ('config' === Request::input('mode')) {
+            if (Request::input('mode') === 'config') {
                 $response = 'graph_title Aperture Image Proxy
 graph_info Image proxy bandwidth usage
 graph_vlabel Bytes/Sec

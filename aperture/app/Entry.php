@@ -45,7 +45,7 @@ class Entry extends Model
     {
         $data = json_decode($this->data, true);
 
-        if (! empty($this->channels) && 1 === count($this->channels)) {
+        if (! empty($this->channels) && count($this->channels) === 1) {
             // Loaded through a specific channel, or belonging to just one
             // channel.
             $channel = $this->channels[0];
@@ -56,7 +56,7 @@ class Entry extends Model
             $data = json_decode($channel->pivot->original_data, true);
         }
 
-        if (isset($channel) && 'disabled' !== $channel->read_tracking_mode) {
+        if (isset($channel) && $channel->read_tracking_mode !== 'disabled') {
             $data['_is_read'] = (bool) $channel->pivot->seen;
         } else {
             // Most likely loaded through "Unread" channel (and part of multiple
@@ -83,13 +83,13 @@ class Entry extends Model
         // Check the name, content.text, and category values for a keyword match
 
         if (isset($data['name'])) {
-            if (false !== stripos($data['name'], $keyword)) {
+            if (stripos($data['name'], $keyword) !== false) {
                 $matches = true;
             }
         }
 
         if (! $matches && isset($data['content'])) {
-            if (false !== stripos($data['content']['text'], $keyword)) {
+            if (stripos($data['content']['text'], $keyword) !== false) {
                 $matches = true;
             }
         }
@@ -119,22 +119,22 @@ class Entry extends Model
         // Implements Post Type Discovery
         // https://www.w3.org/TR/post-type-discovery/#algorithm
 
-        if ('event' === $data['type']) {
+        if ($data['type'] === 'event') {
             return 'event';
         }
 
         // Experimental
-        if ('card' === $data['type']) {
+        if ($data['type'] === 'card') {
             return 'card';
         }
 
         // Experimental
-        if ('review' === $data['type']) {
+        if ($data['type'] === 'review') {
             return 'review';
         }
 
         // Experimental
-        if ('recipe' === $data['type']) {
+        if ($data['type'] === 'recipe') {
             return 'recipe';
         }
 
@@ -194,7 +194,7 @@ class Entry extends Model
         if (isset($item['url'])) {
             Log::info('Trying to fetch original content at '.$item['url']);
 
-            if ('microformats' === $source->format && empty($source->pivot->xpath_selector)) {
+            if ($source->format === 'microformats' && empty($source->pivot->xpath_selector)) {
                 // Expecting microformats. Let XRay handle things.
                 $xray = new XRay();
                 $data = $xray->parse($item['url'], ['timeout' => 15]);

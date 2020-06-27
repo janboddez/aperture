@@ -58,7 +58,7 @@ class Media extends Model
         $media = false;
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if (! curl_errno($ch) && 200 == $code) {
+        if (! curl_errno($ch) && $code === 200) {
             $media = self::_createFromFile($url, $filedata, $maxSize);
         } else {
             Log::info('Media file '.$url.' returned '.$code);
@@ -162,9 +162,9 @@ class Media extends Model
                 $ext = '.png';
             } elseif (preg_match('/svg/', $mimetype)) {
                 $ext = '.svg';
-            } elseif ('audio/mpeg' == $mimetype) {
+            } elseif ($mimetype == 'audio/mpeg') {
                 $ext = '.mp3';
-            } elseif ('video/mp4' == $mimetype) {
+            } elseif ($mimetype == 'video/mp4') {
                 $ext = '.mp4';
             } else {
                 $ext = '.'.explode('/', $mimetype)[1];

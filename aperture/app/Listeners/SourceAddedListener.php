@@ -29,14 +29,14 @@ class SourceAddedListener implements ShouldQueue
         Log::info('['.$event->source->url.'] Source now belongs to '.$channels->count().' channels');
 
         // If this was a newly added source (belongs to just one channel), subscribe to updates
-        if ($event->source->url && 1 == $channels->count()) {
+        if ($event->source->url && $channels->count() === 1) {
             $event->source->subscribe();
         }
 
         // Add any existing entries to this channel
         Log::info('['.$event->source->url.'] This source has '.($event->source->is_new ? 'no' : 'some').' existing entries. Adding to channel '.$event->channel->id);
         $added = 0;
-        if (false == $event->source->is_new) {
+        if ($event->source->is_new === false) {
             foreach ($event->source->entries()->orderByDesc('created_at')->limit(100)->get() as $i => $entry) {
                 if (! $event->channel->entries()->where('entry_id', $entry->id)->first()) {
                     $shouldAdd = $event->channel->should_add_entry($entry);

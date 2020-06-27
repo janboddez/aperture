@@ -46,7 +46,7 @@ class SubscribeSource implements ShouldQueue
             return;
         }
 
-        if ('microformats' === $this->feed->getType()) {
+        if ($this->feed->getType() === 'microformats') {
             $source = Source::where('url', $this->feed->getHtmlUrl())->first();
         } else {
             $source = Source::where('url', $this->feed->getXmlUrl())->first();
@@ -56,7 +56,7 @@ class SubscribeSource implements ShouldQueue
             $source = new Source();
             $source->created_by = $channel->user_id;
 
-            if ('microformats' === $this->feed->getType()) {
+            if ($this->feed->getType() === 'microformats') {
                 $source->url = $this->feed->getHtmlUrl() ?? $this->feed->getXmlUrl();
             } else {
                 $source->url = $this->feed->getXmlUrl();
@@ -69,7 +69,7 @@ class SubscribeSource implements ShouldQueue
             $source->save();
         }
 
-        if (0 === $channel->sources()->where('source_id', $source->id)->count()) {
+        if ($channel->sources()->where('source_id', $source->id)->count() === 0) {
             $channel->sources()->attach($source->id, ['created_at' => date('Y-m-d H:i:s')]);
             $channel->sources()->updateExistingPivot($source->id, [
                 'name' => $this->feed->getTitle(),

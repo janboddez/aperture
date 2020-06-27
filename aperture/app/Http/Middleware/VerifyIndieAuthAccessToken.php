@@ -94,7 +94,7 @@ class VerifyIndieAuthAccessToken
                 ]);
 
                 // The token endpoint should return 200 for a valid token
-                if (200 != $token_response['code']) {
+                if ($token_response['code'] !== 200) {
                     $body = $token_response['body'];
                     $decoded = @json_decode($body);
                     if ($decoded) {

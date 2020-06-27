@@ -27,7 +27,7 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
 
-        if ('on' == Request::input('demo_mode_enabled')) {
+        if (Request::input('demo_mode_enabled') === 'on') {
             $user->demo_mode_enabled = 1;
         } else {
             $user->demo_mode_enabled = 0;

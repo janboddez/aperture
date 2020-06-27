@@ -57,7 +57,7 @@ class VerifyChannelApiKey
                 }
 
                 // If this source is in only one channel, add the channel_id to the token data too
-                if (1 == $source->channels()->count()) {
+                if ($source->channels()->count() === 1) {
                     $token_data['channel_id'] = $source->channels()->first()->id;
                 }
             } else {

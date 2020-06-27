@@ -17,7 +17,7 @@ class MicropubController extends Controller
     private function _getRequestSource()
     {
         $td = Request::get('token_data');
-        if (isset($td['type']) && 'source' == $td['type']) {
+        if (isset($td['type']) && $td['type'] === 'source') {
             return Source::where('id', $td['source_id'])->first();
         } else {
             return Response::json([
@@ -29,7 +29,7 @@ class MicropubController extends Controller
 
     public function get()
     {
-        if ('config' == Request::input('q')) {
+        if (Request::input('q') === 'config') {
             return response()->json([
                 'media-endpoint' => env('APP_URL').'/micropub/media',
             ]);
@@ -40,7 +40,7 @@ class MicropubController extends Controller
     {
         $source = $this->_getRequestSource();
 
-        if ('Illuminate\Http\JsonResponse' == get_class($source)) {
+        if (get_class($source) === 'Illuminate\Http\JsonResponse') {
             return $source;
         }
 
@@ -51,7 +51,7 @@ class MicropubController extends Controller
         // If the content type is application/jf2+json then accept the JSON directly.
         // This is probably dangerous and we should validate the jf2 document first,
         // but that is more work than I want to do right now so we'll deal with that later.
-        if ('application/jf2+json' == Request::header('Content-Type')) {
+        if (Request::header('Content-Type') === 'application/jf2+json') {
             $item = json_decode($input, true);
 
             if (! $item || ! isset($item['type'])) {
@@ -107,7 +107,7 @@ class MicropubController extends Controller
         event(new EntrySaved($entry));
 
         if ($new) {
-            if (true === $source->is_new) {
+            if ($source->is_new === true) {
                 $source->is_new = false;
                 $source->save();
             }
@@ -132,7 +132,7 @@ class MicropubController extends Controller
     {
         $source = $this->_getRequestSource();
 
-        if ('Illuminate\Http\JsonResponse' == get_class($source)) {
+        if (get_class($source) === 'Illuminate\Http\JsonResponse') {
             return $source;
         }
 

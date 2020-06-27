@@ -36,7 +36,7 @@ class LoginController extends Controller
         $url = IndieAuth\Client::normalizeMeURL($url);
         $url = IndieAuth\Client::resolveMeURL($url); // follows redirects and uses the canonical one
 
-        if (false == env('PUBLIC_ACCESS')) {
+        if (env('PUBLIC_ACCESS') === false) {
             $check = User::where('url', $url)->first();
             if (! $check) {
                 return redirect('login')->with('auth_error', 'invalid url')
@@ -156,7 +156,7 @@ class LoginController extends Controller
 
     public function api_register()
     {
-        if (false == env('PUBLIC_ACCESS')) {
+        if (env('PUBLIC_ACCESS') === false) {
             return 'This server does not allow public registrations';
         }
 

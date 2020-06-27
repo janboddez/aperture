@@ -30,7 +30,7 @@ class WebSubReceiverController extends Controller
             return Response::json(['error' => 'not_found'], 404);
         }
 
-        if (0 === $source->channels()->count()) {
+        if ($source->channels()->count() === 0) {
             Log::warning('Source:'.$source->id.' ('.parse_url($source->url, PHP_URL_HOST).') is not associated with any channels, skipping and unsubscribing');
             \App\Jobs\UnsubscribeSource::dispatch($source);
 
@@ -45,7 +45,7 @@ class WebSubReceiverController extends Controller
         $xray = new XRay();
         $parsed = $xray->parse($source->url, $body, ['expect' => 'feed']);
 
-        if ($parsed && isset($parsed['data']['type']) && 'feed' == $parsed['data']['type']) {
+        if ($parsed && isset($parsed['data']['type']) && $parsed['data']['type'] === 'feed') {
             $new_entries = 0;
             $entry_ids = []; // keep track of all entries in the currect snapshot
 
@@ -132,7 +132,7 @@ class WebSubReceiverController extends Controller
                         // Fetch original content is enabled for this channel.
                         Log::debug('Trying to fetch original content at '.$item['url']);
 
-                        if ('microformats' === $source->format && empty($channel->pivot->xpath_selector)) {
+                        if ($source->format === 'microformats' && empty($channel->pivot->xpath_selector)) {
                             // Expecting microformats. Let XRay handle things.
                             $data = $xray->parse($item['url'], ['timeout' => 15]);
 
@@ -189,7 +189,7 @@ class WebSubReceiverController extends Controller
 
                     $channel->entries()->attach($entry->id, [
                         'created_at' => $created_at,
-                        'seen' => ('disabled' === $channel->read_tracking_mode || $source_is_empty ? 1 : 0),
+                        'seen' => ($channel->read_tracking_mode === 'disabled' || $source_is_empty ? 1 : 0),
                         'batch_order' => $i,
                         'original_data' => $originalData,
                     ]);

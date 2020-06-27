@@ -36,7 +36,7 @@ class OpmlController extends Controller
         $items = array_reverse($feedList->getItems());
 
         foreach ($items as $item) {
-            if ('category' === $item->getType()) {
+            if ($item->getType() === 'category') {
                 $category = trim($item->getTitle());
                 $channel = Channel::where('user_id', Auth::id())
                     ->where('name', $category)
@@ -115,7 +115,7 @@ class OpmlController extends Controller
                 $url = str_replace('&amp;', '&', $source->url);
                 $url = str_replace('&', '&amp;', $source->url);
 
-                if ('microformats' === $source->format) {
+                if ($source->format === 'microformats') {
                     $feed->setHtmlUrl($url);
                 } else {
                     $feed->setXmlUrl($url);
