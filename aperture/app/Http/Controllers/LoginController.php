@@ -73,7 +73,14 @@ class LoginController extends Controller
         $redirect_uri = route('login_callback');
         $client_id = route('index').'/';
         $scope = 'read'; // Request "read" scope so that Aperture can get a token to fetch the Micropub config
-        $authorizationURL = IndieAuth\Client::buildAuthorizationURL($authorizationEndpoint, $url, $redirect_uri, $client_id, $state, $scope);
+        $authorizationURL = IndieAuth\Client::buildAuthorizationURL(
+            $authorizationEndpoint,
+            $url,
+            $redirect_uri,
+            $client_id,
+            $state,
+            $scope
+        );
 
         return redirect($authorizationURL);
     }
@@ -91,7 +98,7 @@ class LoginController extends Controller
             ]);
         }
 
-        if (Request::input('state') != session('state')) {
+        if (Request::input('state') !== session('state')) {
             return view('login/error', [
                 'error' => 'invalid state',
                 'description' => 'The state returned in the callback did not match the expected value. The IndieAuth server may be configured incorrectly.',
@@ -99,11 +106,17 @@ class LoginController extends Controller
         }
 
         // Check the authorization code at the endpoint previously discovered
-        $auth = IndieAuth\Client::getAccessToken(session('token_endpoint'), Request::input('code'), session('indieauth_url'), route('login_callback'), route('index').'/');
+        $auth = IndieAuth\Client::getAccessToken(
+            session('token_endpoint'),
+            Request::input('code'),
+            session('indieauth_url'),
+            route('login_callback'),
+            route('index').'/'
+        );
 
         if (isset($auth['me'])) {
             // Check that the URL returned is on the same domain as the expected URL
-            if (parse_url($auth['me'], PHP_URL_HOST) != parse_url(session('indieauth_url'), PHP_URL_HOST)) {
+            if (parse_url($auth['me'], PHP_URL_HOST) !== parse_url(session('indieauth_url'), PHP_URL_HOST)) {
                 return view('login/error', [
                     'error' => 'invalid user',
                     'description' => 'The URL for the user returned did not match the domain of the user initially signing in',
