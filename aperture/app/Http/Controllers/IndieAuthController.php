@@ -47,7 +47,7 @@ class IndieAuthController extends Controller
             ]), 400);
         }
 
-        if ('code' != Request::get('response_type')) {
+        if (Request::get('response_type') !== 'code') {
             return response(view('oauth/error', [
                 'error' => 'bad response type',
                 'description' => 'Aperture cannot be used to just log in to apps, it can only be used with Micropub apps to create posts in your channels.',
@@ -63,7 +63,7 @@ class IndieAuthController extends Controller
 
         $client_info = self::_client_info($client_id);
         if ($client_info) {
-            if (isset($client_info['data']['type']) && 'app' == $client_info['data']['type']) {
+            if (isset($client_info['data']['type']) && $client_info['data']['type'] === 'app') {
                 $client_name = $client_info['data']['name'] ?? null;
                 $client_icon = $client_info['data']['logo'] ?? null;
             }
@@ -231,7 +231,7 @@ class IndieAuthController extends Controller
         // Verify access tokens
         // This is called with the ChannelAPIKey middleware which handles parsing the header and verifying the token
         $td = Request::get('token_data');
-        if (isset($td['type']) && 'source' == $td['type']) {
+        if (isset($td['type']) && $td['type'] === 'source') {
             $source = Source::where('id', $td['source_id'])->first();
             $user = User::where('id', $td['user_id'])->first();
             if (isset($td['channel_id'])) {
@@ -313,8 +313,8 @@ class IndieAuthController extends Controller
             $source->save();
         }
 
-        if (0 == $channel->sources()->where('source_id', $source->id)->count()) {
-            $channel->sources()->attach($source->id, ['created_at'=>date('Y-m-d H:i:s')]);
+        if ($channel->sources()->where('source_id', $source->id)->count() === 0) {
+            $channel->sources()->attach($source->id, ['created_at' => date('Y-m-d H:i:s')]);
         }
 
         $me = $this->_me($user, $channel, $source);
