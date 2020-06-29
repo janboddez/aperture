@@ -163,7 +163,7 @@
                 </div>
                 </div>
 
-                @if (Auth()::user->fetch_original_enabled)
+                @if (Auth::user()->fetch_original_enabled)
                     <div class="field">
                     <div class="control">
                         <label class="checkbox">
@@ -307,7 +307,7 @@
                     </div>
                 </div>
 
-                @if ($destinations=Auth::user()->get_micropub_config('destination'))
+                @if ($destinations = Auth::user()->get_micropub_config('destination'))
                     <div class="field">
                         <div class="control">
                             <label class="label" for="default-destination">Default Destination</label>
@@ -401,7 +401,7 @@ $(function() {
         $('#source-name').val($(this).parents('.source').find('.source-name').attr('value'));
         $('#site-url').val($(this).parents('.source').find('.site-url').attr('value'));
 
-        @if (Auth()::user->fetch_original_enabled)
+        @if (Auth::user()->fetch_original_enabled)
             $('#fetch-original').prop('checked', eval($(this).parents('.source').find('.fetch-original').attr('value')));
             $('#xpath-selector').val($(this).parents('.source').find('.xpath-selector').attr('value'));
         @endif

@@ -47,7 +47,7 @@ class SettingsController extends Controller
 
         $user->save();
 
-        session()->flash('settings', 'Settings were saved');
+        session()->flash('settings', 'Settings saved!');
 
         return redirect('settings');
     }
