@@ -23,14 +23,26 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function save()
+    public function save(Request $request)
     {
         $user = Auth::user();
 
-        if (Request::input('demo_mode_enabled') === 'on') {
+        if ($request->has('demo_mode_enabled')) {
             $user->demo_mode_enabled = 1;
         } else {
             $user->demo_mode_enabled = 0;
+        }
+
+        if ($request->has('opml_endpoint_enabled')) {
+            $user->opml_endpoint_enabled = 1;
+        } else {
+            $user->opml_endpoint_enabled = 0;
+        }
+
+        if ($request->has('fetch_original_enabled')) {
+            $user->fetch_original_enabled = 1;
+        } else {
+            $user->fetch_original_enabled = 0;
         }
 
         $user->save();

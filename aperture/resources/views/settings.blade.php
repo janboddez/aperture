@@ -18,7 +18,7 @@
                 <h2 class="subtitle">Demo Mode</h2>
                 <div class="field">
                     <label class="checkbox">
-                        <input type="checkbox" name="demo_mode_enabled" {{ Auth::user()->demo_mode_enabled ? 'checked="checked"' : '' }}>
+                        <input type="checkbox" name="demo_mode_enabled" {!! Auth::user()->demo_mode_enabled ? 'checked="checked"' : '' !!}>
                         Enable demo mode
                     </label>
                     <p class="help">Hides certain channels from the UI and Microsub clients. Choose which channels are hidden in the channel settings.</p>
@@ -27,7 +27,7 @@
                 <h2 class="subtitle" style="margin-top: 1.5rem;">OPML Endpoint</h2>
                 <div class="field">
                     <label class="checkbox">
-                        <input type="checkbox" name="opml_endpoint_enabled" {{ Auth::user()->opml_endpoint_enabled ? 'checked="checked"' : '' }}>
+                        <input type="checkbox" name="opml_endpoint_enabled" {!! Auth::user()->opml_endpoint_enabled ? 'checked="checked"' : '' !!}>
                         Enable public OPML endpoint
                     </label>
                     <p class="help">Publicly publishes your channels and sources, using OPML.</p>
@@ -36,7 +36,7 @@
                 <h2 class="subtitle" style="margin-top: 1.5rem;">Fetch Original Content</h2>
                 <div class="field">
                     <label class="checkbox">
-                        <input type="checkbox" name="fetch_original_enabled" {{ Auth::user()->fetch_original_enabled ? 'checked="checked"' : '' }}>
+                        <input type="checkbox" name="fetch_original_enabled" {!! Auth::user()->fetch_original_enabled ? 'checked="checked"' : '' !!}>
                         Enable "Fetch Original Content"
                     </label>
                     <p class="help">Enables fetching full articles, e.g., for summarry-only feeds.</p>

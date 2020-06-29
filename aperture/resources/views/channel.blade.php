@@ -58,7 +58,7 @@
                 <data class="source-url" value="{{ $source->url }}"></data>
                 <data class="source-format" value="{{ $source->format }}"></data>
                 <data class="source-entries-count" value="{{ $source->entries_count }}"></data>
-                <data class="source-channels" value='{{ json_encode($source->channels()->pluck('channels.uid')) }}'></data>
+                <data class="source-channels" value='{!! json_encode($source->channels()->pluck('channels.uid')) !!}'></data>
             </div>
         @endforeach
     </div>
@@ -163,21 +163,23 @@
                 </div>
                 </div>
 
-                <div class="field">
-                <div class="control">
-                    <label class="checkbox">
-                    <input type="checkbox" name="fetch_original" id="fetch-original" value="">
-                    Fetch original content?
-                    </label>
-                </div>
-                </div>
+                @if (Auth()::user->fetch_original_enabled)
+                    <div class="field">
+                    <div class="control">
+                        <label class="checkbox">
+                        <input type="checkbox" name="fetch_original" id="fetch-original" value="">
+                        Fetch original content?
+                        </label>
+                    </div>
+                    </div>
 
-                <div class="field">
-                <div class="control">
-                    <label class="label" for="xpath-selector">XPath Selector</label>
-                    <input class="input" type="text" name="xpath_selector" id="xpath-selector" value="">
-                </div>
-                </div>
+                    <div class="field">
+                    <div class="control">
+                        <label class="label" for="xpath-selector">XPath Selector</label>
+                        <input class="input" type="text" name="xpath_selector" id="xpath-selector" value="">
+                    </div>
+                    </div>
+                @endif
 
                 <div class="field">
                 <div class="control">
@@ -398,8 +400,11 @@ $(function() {
         e.preventDefault();
         $('#source-name').val($(this).parents('.source').find('.source-name').attr('value'));
         $('#site-url').val($(this).parents('.source').find('.site-url').attr('value'));
-        $('#fetch-original').prop('checked', eval($(this).parents('.source').find('.fetch-original').attr('value')));
-        $('#xpath-selector').val($(this).parents('.source').find('.xpath-selector').attr('value'));
+
+        @if (Auth()::user->fetch_original_enabled)
+            $('#fetch-original').prop('checked', eval($(this).parents('.source').find('.fetch-original').attr('value')));
+            $('#xpath-selector').val($(this).parents('.source').find('.xpath-selector').attr('value'));
+        @endif
 
         var channels = JSON.parse($(this).parents('.source').find('.source-channels').attr('value'));
 
@@ -429,8 +434,10 @@ $(function() {
             _token: csrf_token(),
             name: $('#source-name').val(),
             site_url: $('#site-url').val(),
-            fetch_original: $('#fetch-original').is(':checked'),
-            xpath_selector: $('#xpath-selector').val(),
+            @if (Auth()::user->fetch_original_enabled)
+                fetch_original: $('#fetch-original').is(':checked'),
+                xpath_selector: $('#xpath-selector').val(),
+            @endif
             channels: channels
         }, function(response) {
             reload_window(); // cheap way out
