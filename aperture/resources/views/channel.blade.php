@@ -434,7 +434,7 @@ $(function() {
             _token: csrf_token(),
             name: $('#source-name').val(),
             site_url: $('#site-url').val(),
-            @if (Auth()::user->fetch_original_enabled)
+            @if (Auth::user()->fetch_original_enabled)
                 fetch_original: $('#fetch-original').is(':checked'),
                 xpath_selector: $('#xpath-selector').val(),
             @endif
