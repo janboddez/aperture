@@ -254,7 +254,7 @@ class Entry extends Model
                     }
                 } catch (\Exception $e) {
                     // Something went wrong.
-                    Log::debug($e->getMessage());
+                    Log::warning($e->getMessage());
                 }
             }
         }

@@ -117,85 +117,19 @@ class WebSubReceiverController extends Controller
                     }
 
                     Log::info('  Adding to channel '.$channel->name.' #'.$channel->id);
+
                     // If the source was previously empty, use the published date on the entry in
                     // order to avoid flooding the channel with new posts
                     // TODO: it's possible that this will create a conflicting record based on the published_date and batch_order.
                     // To really solve this, we'd need to first query the channel_entry table to find any records that match
                     // the `created_at` we're about to use, and increment the `batch_order` higher than any that were found.
                     // This is likely rare enough that I'm not going to worry about it for now.
-                    $created_at = ($source_is_empty && $entry->published ? $entry->published : gmdate('Y-m-d H:i:s'));
+                    $created_at = ($source_is_empty && $entry->published ? $entry->published : date('Y-m-d H:i:s'));
 
                     if (strtotime($created_at) <= 0) {
                         $created_at = '1970-01-01 00:00:01';
                     }
 
-                    // $item = json_decode($entry->data, true);
-/*
-                    $originalData = null;
-
-                    if (isset($item['url']) && $channel->pivot->fetch_original) {
-                        // Fetch original content is enabled for this channel.
-                        Log::debug('Trying to fetch original content at '.$item['url']);
-
-                        if ($source->format === 'microformats' && empty($channel->pivot->xpath_selector)) {
-                            // Expecting microformats. Let XRay handle things.
-                            $data = $xray->parse($item['url'], ['timeout' => 15]);
-
-                            if (! empty($data['data'])) {
-                                if (! empty($data['data']['published']) && $data['data']['published'] === '1970-01-01 00:00:00') {
-                                    $data['data']['published'] = gmdate('Y-m-d H:i:s');
-                                }
-
-                                $originalData = json_encode($data['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-                            } elseif (! empty($data['error_description'])) {
-                                Log::error('Fetching failed: '.$data['error_description']);
-                            }
-                        } else {
-                            // Going to just fetch the HTML and sanitize it.
-                            // To do: add headers, etc.
-                            try {
-                                $html = file_get_contents($item['url']);
-                                $html = mb_convert_encoding($html, 'HTML-ENTITIES', mb_detect_encoding($html));
-
-                                libxml_use_internal_errors(true);
-
-                                $doc = new \DOMDocument();
-                                $doc->loadHTML($html, LIBXML_HTML_NODEFDTD);
-
-                                $xpath = new \DOMXPath($doc);
-
-                                $selector = $channel->pivot->xpath_selector ?? '//main';
-                                // Log::debug($selector);
-
-                                $result = $xpath->query($selector);
-                                $value = '';
-
-                                foreach ($result as $node) {
-                                    // As is, multiple matching nodes will be concatenated.
-                                    $value .= $doc->saveHTML($node).PHP_EOL;
-                                }
-
-                                $value = trim($value);
-
-                                if (! empty($value)) {
-                                    // Using reflections to call protected methods of the (abstract) Format class.
-                                    $sanitizeHTML = new \ReflectionMethod(Format::class, 'sanitizeHTML');
-                                    $sanitizeHTML->setAccessible(true);
-                                    $stripHTML = new \ReflectionMethod(Format::class, 'stripHTML');
-                                    $stripHTML->setAccessible(true);
-
-                                    $item['content']['html'] = $sanitizeHTML->invoke(null, $value);
-                                    $item['content']['text'] = $stripHTML->invoke(null, $value);
-
-                                    $originalData = json_encode($item, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-                                }
-                            } catch (\Exception $e) {
-                                // Something went wrong.
-                                Log::debug($e->getMessage());
-                            }
-                        }
-                    }
-*/
                     $channel->entries()->attach($entry->id, [
                         'created_at' => $created_at,
                         'seen' => ($channel->read_tracking_mode === 'disabled' || $source_is_empty ? 1 : 0),
@@ -205,7 +139,6 @@ class WebSubReceiverController extends Controller
 
                     if (isset($item['url']) && $channel->pivot->fetch_original) {
                         // Fetch original content is enabled for this channel.
-                        Log::debug('Trying to fetch original content at '.$item['url']);
                         $entry->fetchOriginalContent($channel);
                     }
                 }
