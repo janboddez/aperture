@@ -200,6 +200,15 @@ class Entry extends Model
                 $data = $xray->parse($item['url'], ['timeout' => 15]);
 
                 if (! empty($data['data'])) {
+                    // Some sources, it would seem, don't post a self-referencing URL.
+                    $data['data']['url'] = $item['url'];
+
+                    if (isset($data['data']['published']) && strtotime($data['data']['published']) <= 0) {
+                        // If the reported publication date is faulty, replace
+                        // it with the timestamp saved previously.
+                        $data['data']['published'] = $this->published;
+                    }
+
                     $originalData = json_encode($data['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                 } elseif (! empty($data['error_description'])) {
                     Log::error('Fetching failed: '.$data['error_description']);

@@ -33,6 +33,9 @@ class Controller extends BaseController
         // else
         if (preg_match('/([0-9a-zA-Z_]{6}):([0-9a-zA-Z_]+)/', $cursor, $match)) {
             return [date('Y-m-d H:i:s', \p3k\b60to10($match[1])), \p3k\b60to10($match[2])];
+        } elseif (preg_match('/0:([0-9a-zA-Z_]+)/', $cursor, $match)) {
+            // The first "argument" here (wrongly, obviously) means "Jan 1, 1970."
+            return ['1970-01-01 00:00:00', \p3k\b60to10($match[1])];
         }
 
         return false;

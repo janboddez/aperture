@@ -88,6 +88,11 @@ class WebSubReceiverController extends Controller
                 // Also cache the published date for sorting
                 if (isset($item['published'])) {
                     $entry->published = date('Y-m-d H:i:s', strtotime($item['published']));
+
+                    // Replace somehow faulty dates with the current date.
+                    if ($entry->published === '1970-01-01 00:00:00') {
+                        $entry->published = date('Y-m-d H:i:s');
+                    }
                 }
 
                 if ($entry_is_new || md5($entry->data) !== $hash) {
@@ -118,14 +123,14 @@ class WebSubReceiverController extends Controller
                     // To really solve this, we'd need to first query the channel_entry table to find any records that match
                     // the `created_at` we're about to use, and increment the `batch_order` higher than any that were found.
                     // This is likely rare enough that I'm not going to worry about it for now.
-                    $created_at = ($source_is_empty && $entry->published ? $entry->published : date('Y-m-d H:i:s'));
+                    $created_at = ($source_is_empty && $entry->published ? $entry->published : gmdate('Y-m-d H:i:s'));
 
                     if (strtotime($created_at) <= 0) {
                         $created_at = '1970-01-01 00:00:01';
                     }
 
                     // $item = json_decode($entry->data, true);
-
+/*
                     $originalData = null;
 
                     if (isset($item['url']) && $channel->pivot->fetch_original) {
@@ -137,6 +142,10 @@ class WebSubReceiverController extends Controller
                             $data = $xray->parse($item['url'], ['timeout' => 15]);
 
                             if (! empty($data['data'])) {
+                                if (! empty($data['data']['published']) && $data['data']['published'] === '1970-01-01 00:00:00') {
+                                    $data['data']['published'] = gmdate('Y-m-d H:i:s');
+                                }
+
                                 $originalData = json_encode($data['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                             } elseif (! empty($data['error_description'])) {
                                 Log::error('Fetching failed: '.$data['error_description']);
@@ -186,13 +195,19 @@ class WebSubReceiverController extends Controller
                             }
                         }
                     }
-
+*/
                     $channel->entries()->attach($entry->id, [
                         'created_at' => $created_at,
                         'seen' => ($channel->read_tracking_mode === 'disabled' || $source_is_empty ? 1 : 0),
                         'batch_order' => $i,
-                        'original_data' => $originalData,
+                        // 'original_data' => $originalData,
                     ]);
+
+                    if (isset($item['url']) && $channel->pivot->fetch_original) {
+                        // Fetch original content is enabled for this channel.
+                        Log::debug('Trying to fetch original content at '.$item['url']);
+                        $entry->fetchOriginalContent($channel);
+                    }
                 }
             }
 
