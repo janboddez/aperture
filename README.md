@@ -6,7 +6,7 @@ The following are what makes F-Stop (or, its `develop` branch) different from Ap
 - An attempt at improved keyboard navigation, i.e., within the different settings modals
 - OPML import and export; export and import your entire feed list to other feed aggregators
 - Additional source settings (like a site URL)
-- The ability fetch and parse complete entries, even for summary-only feeds (uses X-Ray for h-feeds, or an optional XPath selector to locate actual post content within a web page)
+- The ability to "fetch original content," i.e., fetch and parse complete entries, even for summary-only feeds
 - A dynamically populated "Unread" that groups all unread entries
 - The ability to really easily move and copy sources between different channels
 
