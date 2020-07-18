@@ -7,8 +7,8 @@ The following are what makes F-Stop (or, its `develop` branch) different from Ap
 - OPML import and export; export and import your entire feed list to other feed aggregators
 - Additional source settings (like a site URL)
 - The ability to "fetch original content," i.e., fetch and parse complete entries, even for summary-only feeds
-- A dynamically populated "Unread" that groups all unread entries
-- The ability to really easily move and copy sources between different channels
+- A dynamically populated "Unread" channel, which groups all unread entries
+- The ability to really easily move or copy sources between different channels
 
 ## Credits
 [Aperture](https://github.com/aaronpk/Aperture) was created by Aaron Parecki and made available under the Apache 2.0 license. Aperture logo by Gregor Cresnar from the Noun Project.
