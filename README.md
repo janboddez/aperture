@@ -11,7 +11,7 @@ The following are what currently makes F-Stop different from Aperture:
 - The ability to really easily move or copy sources between different channels
 
 ## Fetch Original Content
-This feature can be enabled on a per-source basis, or triggered manually, for clients that support it, for specific posts. It supports XPath queries.
+This feature can be enabled on a per-source basis, or triggered manually, in clients that support it, for specific posts. It supports XPath queries.
 
 ## Credits
 [Aperture](https://github.com/aaronpk/Aperture) was created by Aaron Parecki and made available under the Apache 2.0 license. Aperture logo by Gregor Cresnar from the Noun Project.
