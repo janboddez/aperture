@@ -8,7 +8,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ env('APP_NAME') }}</title>
+    <title>{{ config('app.name') }}</title>
 
     @include('components/favicon')
 
@@ -21,7 +21,7 @@
     <div class="hero-body">
         <div class="container has-text-centered">
             <div class="column is-6 is-offset-3">
-                <h3 class="title has-text-grey">Sign in to Aperture</h3>
+                <h3 class="title has-text-grey">Sign in to {{ config('app.name') }}</h3>
                 <div class="box">
 
                     @if(session('auth_error'))

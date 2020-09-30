@@ -8,7 +8,6 @@ use App\Events\EntrySaved;
 use App\Source;
 use Log;
 use p3k\XRay;
-use p3k\XRay\Formats\Format;
 use Request;
 use Response;
 
