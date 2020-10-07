@@ -11,7 +11,7 @@ The following are what currently makes F-Stop different from Aperture:
 - The ability to really easily move or copy sources between different channels
 
 ## Remark
-Some things and files were somewhat reshuffled, to bring thins a bit more in line with most other Laravel projects. Also, this fork was updated to Laravel 6 (LTS), which should recieve security updates until September 3, 2022. (Official support for Laravel 5.x has ended.)
+Certain files were somewhat reshuffled, to bring things a bit more in line with most other Laravel projects. Also, this fork was updated to Laravel 6 (LTS), which should recieve security updates until September 3, 2022. (Official support for Laravel 5.x has ended.)
 
 ## Fetch Original Content
 This feature can be enabled on a per-source basis, or triggered manually, in clients that support it, for specific posts. It supports XPath queries.
