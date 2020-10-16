@@ -7,7 +7,6 @@ use App\Events\EntryDeleting;
 use Illuminate\Database\Eloquent\Model;
 use Log;
 use p3k\XRay;
-use p3k\XRay\Formats\Format;
 
 class Entry extends Model
 {
@@ -202,12 +201,8 @@ class Entry extends Model
                 if (! empty($data['data'])) {
                     // Some sources, it would seem, don't post a self-referencing URL.
                     $data['data']['url'] = $item['url'];
-
-                    if (isset($data['data']['published']) && strtotime($data['data']['published']) <= 0) {
-                        // If the reported publication date is faulty, replace
-                        // it with the timestamp saved previously.
-                        $data['data']['published'] = $this->published;
-                    }
+                    $data['data']['published'] = gmdate('c', strtotime($this->published));
+                    $data['data']['url'] = $item['url'];
 
                     $originalData = json_encode($data['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                 } elseif (! empty($data['error_description'])) {

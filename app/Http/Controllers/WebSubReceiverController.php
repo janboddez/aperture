@@ -84,14 +84,14 @@ class WebSubReceiverController extends Controller
                 $entry->data = $data;
                 $entry->currently_in_feed = true;
 
-                // Also cache the published date for sorting
+                // Cache the published date for sorting.
                 if (isset($item['published'])) {
                     $entry->published = date('Y-m-d H:i:s', strtotime($item['published']));
+                }
 
-                    // Replace somehow faulty dates with the current date.
-                    if ($entry->published === '1970-01-01 00:00:00') {
-                        $entry->published = date('Y-m-d H:i:s');
-                    }
+                // Ensure a timestamp exists.
+                if (empty($entry->published) || strtotime($entry->published) <= 0) {
+                    $entry->published = date('Y-m-d H:i:s');
                 }
 
                 if ($entry_is_new || md5($entry->data) !== $hash) {
@@ -116,14 +116,13 @@ class WebSubReceiverController extends Controller
                     }
 
                     Log::info('  Adding to channel '.$channel->name.' #'.$channel->id);
-
                     // If the source was previously empty, use the published date on the entry in
                     // order to avoid flooding the channel with new posts
                     // TODO: it's possible that this will create a conflicting record based on the published_date and batch_order.
                     // To really solve this, we'd need to first query the channel_entry table to find any records that match
                     // the `created_at` we're about to use, and increment the `batch_order` higher than any that were found.
                     // This is likely rare enough that I'm not going to worry about it for now.
-                    $created_at = ($source_is_empty && $entry->published ? $entry->published : date('Y-m-d H:i:s'));
+                    $created_at = ($source_is_empty && $entry->published ? $entry->published : gmdate('Y-m-d H:i:s'));
 
                     if (strtotime($created_at) <= 0) {
                         $created_at = '1970-01-01 00:00:01';
@@ -133,11 +132,11 @@ class WebSubReceiverController extends Controller
                         'created_at' => $created_at,
                         'seen' => ($channel->read_tracking_mode === 'disabled' || $source_is_empty ? 1 : 0),
                         'batch_order' => $i,
-                        // 'original_data' => $originalData,
                     ]);
 
                     if (isset($item['url']) && $channel->pivot->fetch_original) {
                         // Fetch original content is enabled for this channel.
+                        Log::info('Trying to fetch original content at '.$item['url']);
                         $entry->fetchOriginalContent($channel);
                     }
                 }

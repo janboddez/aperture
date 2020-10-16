@@ -178,6 +178,7 @@ class MicrosubController extends Controller
         // "Create" the "Unread" channel.
         $count = Entry::whereHas('channels', function ($query) {
             $query->where('channels.user_id', Auth::id())
+                ->where('channels.read_tracking_mode', 'count')
                 ->where('channel_entry.seen', 0);
         })
         ->distinct()
@@ -423,17 +424,9 @@ class MicrosubController extends Controller
                 // Fetch only unseen entries in any of the current user's
                 // channels that support read tracking.
                 $query->where('channels.user_id', Auth::id())
-                    ->where('channels.read_tracking_mode', '!=', 'disabled')
+                    ->where('channels.read_tracking_mode', 'count')
                     ->where('channel_entry.seen', 0);
             })
-            /*
-            // Fetch only unseen entries in any of the current user's
-            // channels that support read tracking.
-            $entries = $entries->whereHas('channels', function ($query) {
-                $query->where('channels.read_tracking_mode', '!=', 'disabled')
-                    ->where('channel_entry.seen', 0);
-            })
-            */
             ->with(['channels' => function ($query) {
                 // Eager load only the current user's related channels.
                 $query->where('channels.user_id', Auth::id())
