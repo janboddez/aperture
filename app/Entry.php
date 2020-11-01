@@ -7,6 +7,7 @@ use App\Events\EntryDeleting;
 use Illuminate\Database\Eloquent\Model;
 use Log;
 use p3k\XRay;
+use p3k\XRay\Formats\Format;
 
 class Entry extends Model
 {
