@@ -1,4 +1,6 @@
 # F-Stop
+**Note:** F-Stop is being written from the ground up. While this version will likely continue to work for quite a bit, some issues do exist, especially if it was set up for multiple user accounts.
+
 F-Stop is an experimental fork of [Aperture](https://aperture.p3k.io), a [Microsub](https://indieweb.org/Microsub) server.
 
 ## Features
